@@ -1,4 +1,2 @@
 # Mytilus
-"testing my setup"
-"This is a line from RStudio"
-"another"testing from git bash
+"Investigating the seascape genetics of Mytilus californianus using a coalescent sampler and various population genetics statistics"

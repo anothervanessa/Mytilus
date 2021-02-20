@@ -1,5 +1,5 @@
 ---
-title: "Hello World"
+title: "Data Analysis: Investigating the seascape genetics of Mytilus californianus using a coalescent sampler"
 author: "Vanessa Garcia"
 date: "2/19/2021"
 output: 
@@ -11,8 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Write a single english sentence
+## 
 ```{r}
-print("hello world")
+
 ```
 
