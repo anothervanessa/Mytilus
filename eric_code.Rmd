@@ -1,0 +1,42 @@
+---
+title: "Eric's Code Contributions"
+output: html_notebook
+---
+
+Started April 12, 2021.
+
+I'll put my code in this document for now.
+
+```{r setup}
+library(tidyverse)
+library(rentrez)
+library(adegenet)
+library(ape)
+```
+
+# Ort & Pogson 2007 data
+
+Download data from Ort and Pogson from Genbank. Make a vector for accessions listed in paper as EU028349– EU029064.
+
+```{r OrtPogson}
+
+accs <- paste0("EU0",28349:29064)
+# this is 716 sequences. Apparently too long for a single entrez query. Will do it as a for loop instead.
+
+for(a in c(1:716)){
+  print(paste(a,accs[a]))
+  fetched <- entrez_fetch(db = "nuccore", id = accs[a], rettype = "fasta")
+  write(fetched, file = "Ort_Pogson_2007.fasta", append = TRUE, sep = "\t")
+}
+
+```
+
+Filter out the CO1 data
+
+```{r Filter}
+
+op <- read.FASTA("Ort_Pogson_2007.fasta")
+op.co1 <- op[str_detect(names(op), pattern = "cox1")]
+names(op.co1) <- str_extract(names(op.co1), pattern = "[A-Z]+[0-9]+[MF]")
+write.FASTA(op.co1, file = "Ort_Pogson_CO1.fasta")
+```
