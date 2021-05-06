@@ -44,18 +44,20 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_alignment_050521.fasta", format="fasta", as.matrix=T)
-myt_aln<-read.FASTA("mcali_alignment_050521.fasta")
+myt_aln<-read.FASTA("mcali_alignment_030521 (2).fasta")
 myt_aln
 
 ```
+
 ```{r}
-myt_b<-myt_aln #do I need to turn the list into a matrix?
+myt_aln<-as.matrix(myt_aln) #do I need to turn the list into a matrix? EDC-YES
 
 # Pop Extract Code
-pop<-gsub(labels(myt_b),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
+pop<-gsub(labels(myt_aln),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
 pop<-gsub(pop,pattern="_",replacement="")
-rownames(myt_b)<-pop
+#rownames(myt_aln)<-pop
 ```
+
 ```{r}
 #visualize variation in alignment
 image.DNAbin(myt_aln,cex.lab = .2)
@@ -121,16 +123,18 @@ return(stats)
 }
 
 #try it out
-hapdivs<-stratastat(myt_b, pop=pop, fun=hap.div)
+hapdivs<-stratastat(myt_aln, pop=pop, fun=hap.div)
 hapdivs
 
 #Nucleotide Diversity
-nucdivs<-stratastat(myt_b, pop=pop, fun=nuc.div)
+nucdivs<-stratastat(myt_aln, pop=pop, fun=nuc.div)
 nucdivs
 
 #Check pegas work with StrataG
+which(duplicated(rownames(myt_aln)))
+rownames(myt_aln)[207]
 
-myt_g<-sequence2gtypes(myt_b,strata=pop)
+myt_g<-sequence2gtypes(myt_aln,strata=pop)
 myt_g<-labelHaplotypes(myt_g)
 myt_g
 
