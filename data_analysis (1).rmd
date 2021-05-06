@@ -194,7 +194,7 @@ write.csv(event_info,
           quote=F)
 ```
 
-#Charles div stats
+#div stats
 ```{r}
 #co1.mat<-read.FASTA("mcali_alignment_030521.fasta")
 co1.2<-dog.aln
