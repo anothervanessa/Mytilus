@@ -14,10 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
-install.packages("poppr")
-library(poppr)
-```
+
 
 ## 
 ```{r}
@@ -46,14 +43,6 @@ library(BiocGenerics)
 
 
 
-
-
-```{r}
-#dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
-myt_aln<-read.FASTA("mcali_revised.fasta")
-myt_aln
-
-```
 
 ```{r}
 myt_aln<-as.matrix(myt_aln) #do I need to turn the list into a matrix? EDC-YES
@@ -162,7 +151,7 @@ pair_phi<-pairwiseTest(co1.2g,stats="phist",nrep=1000,quietly = T,model="raw")
 phi.table<-kable(head(pair_phi$pair.mat$PHIst))
 phi.table
 phi.matrix<-as.matrix(phi.table)
-write.csv(phi.matrix,"phi_st.csv")
+
 ```
 
 ```{r}
@@ -179,13 +168,18 @@ statFst(co1.2g)
 ```{r}
 #this stat gives us the proportion of nucleotide diversity among subpopulations, relative to the total
 #Pairwise Stats
-pairwise_phi<-pairwiseTest(data_g$gtypes,stats="phist",nrep=1000,quietly=T,model="raw")
+pairwise_phi<-pairwiseTest(myt_g$gtypes,stats="phist",nrep=1000,quietly=T,model="raw")
 
 #PhiST in lower triangle, p-value in upper triangle
 kable(pairwise_phi$pair.mat$PHIst, digits=3)
 phiST<-pairwise_phi$pair.mat$PHIst
 phiST[upper.tri(phiST)]= t(phiST)[upper.tri(phiST)]
 heatmap(phiST)
+
+#write it out and read it back in so you don't need to calculate it again
+#write.csv(phiST,"phi_st.csv")
+phiST2 <- read.csv("phi_st.csv")
+phi.dist <- as.dist(phiST)
 ```
 
 #Migrate
