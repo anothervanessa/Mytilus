@@ -13,6 +13,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+```{r}
+install.packages("poppr")
+library(poppr)
+```
+
 ## 
 ```{r}
 install.packages("knitr")
@@ -43,8 +49,8 @@ library(BiocGenerics)
 
 
 ```{r}
-#dog.aln<-read.dna("mcali_alignment_050521.fasta", format="fasta", as.matrix=T)
-myt_aln<-read.FASTA("mcali_alignment_030521 (2).fasta")
+#dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
+myt_aln<-read.FASTA("mcali_revised.fasta")
 myt_aln
 
 ```
