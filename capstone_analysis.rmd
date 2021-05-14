@@ -44,7 +44,7 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
-myt_aln<-read.FASTA("mcali_seqs_210506.fasta")
+myt_aln<-read.FASTA("mcalifornianus_mtDNA_alphapops_210514.fasta")
 myt_aln
 
 ```
@@ -104,15 +104,10 @@ sorted<-sapply(pop.by.haplo,paste, collapse="")
 haplo<-as.roman(1:153)
 queue<-data.frame(haplotype=as.character(haplo), Population=sorted)
 queue
-```
-
-
-```{r}
-install.packages("pegas")
-library(pegas)
-#this doesn't stratify by population
 myt.div<-nuc.div(myt_aln)
 ```
+
+
 
 
 #Diversity Statistics
@@ -179,30 +174,7 @@ heatmap(phiST)
 
 
 #AMOVA
-```{r}
-# make copy of data to practice sorting
-#amova_presorted_seqs<-read.FASTA("mcali_seqs_210506.txt")
-myt_amova<-read.FASTA("sorted_seqs.fasta")
-myt_amova<-as.matrix(myt_amova)
 
-```
-
-
-```{r}
-
-#myt_amova<-read.FASTA("labeled_for_hyp_tests.fasta")
-#myt_amova<-as.matrix(myt_amova) #do I need to turn the list into a matrix? EDC-YES
-
-# Pop Extract Code
-pop<-gsub(labels(myt_amova),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
-pop<-gsub(pop,pattern="_",replacement="")
-
-
-#write.csv(pop,"amova_hypotheses.csv",row.names = F)
-#Open this file up in a spreadsheet program and fill out your hypotheses for higher level hierarchies, with the name of your hypothesis in the header, and pop as the name of the population column
-
-
-```
 
 
 ```{r}
@@ -223,7 +195,7 @@ dists<-dist.dna(myt_amova,model="raw")
 
 #Test Pt. Conception Hypothesis
 ```{r}
-amova_out<-pegas::amova(formula=dists~ptconception/pop1,nperm=1)
+amova_out<-pegas::amova(formula=dists~ptconception/pop1,nperm=1000)
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
@@ -240,7 +212,7 @@ pt_conception_result<-c(FCT,FSC,FST)
 
 #Test Cape Mendocino Hypothesis
 ```{r}
-amova_out<-pegas::amova(formula=dists~capemendo/pop1,nperm=1)
+amova_out<-pegas::amova(formula=dists~capemendo/pop1,nperm=1000)
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
