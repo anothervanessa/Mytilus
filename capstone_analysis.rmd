@@ -44,7 +44,7 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
-myt_aln<-read.FASTA("mcali_seqs_210506.fasta")
+myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
 myt_aln
 
 ```
@@ -108,7 +108,7 @@ queue
 
 
 ```{r}
-install.packages("pegas")
+#install.packages("pegas")
 library(pegas)
 #this doesn't stratify by population
 myt.div<-nuc.div(myt_aln)
@@ -182,7 +182,7 @@ heatmap(phiST)
 ```{r}
 # make copy of data to practice sorting
 #amova_presorted_seqs<-read.FASTA("mcali_seqs_210506.txt")
-myt_amova<-read.FASTA("sorted_seqs.fasta")
+myt_amova<-read.FASTA("lat_sorted_seqs.fasta")
 myt_amova<-as.matrix(myt_amova)
 
 ```
@@ -194,11 +194,11 @@ myt_amova<-as.matrix(myt_amova)
 #myt_amova<-as.matrix(myt_amova) #do I need to turn the list into a matrix? EDC-YES
 
 # Pop Extract Code
-pop<-gsub(labels(myt_amova),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
-pop<-gsub(pop,pattern="_",replacement="")
+#pop<-gsub(labels(myt_amova),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
+#pop<-gsub(pop,pattern="_",replacement="")
 
 
-#write.csv(pop,"amova_hypotheses.csv",row.names = F)
+write.csv(pop,"amova_hypotheses.csv",row.names = F)
 #Open this file up in a spreadsheet program and fill out your hypotheses for higher level hierarchies, with the name of your hypothesis in the header, and pop as the name of the population column
 
 
@@ -208,9 +208,9 @@ pop<-gsub(pop,pattern="_",replacement="")
 ```{r}
 #read them back into R
 amovahyps<-read.csv("amova_hypotheses1.csv")
-ptconception<-amovahyps$pt_conception
-capemendo<-amovahyps$cape_mendo
-marko<-amovahyps$marko_us
+pt_conception<-amovahyps$pt_conception
+cape_mendo<-amovahyps$cape_mendo
+#marko<-amovahyps$marko_us this is basically same as cape mendo except without criego et al. samples
 pop1<-as.factor(pop)
 pop1
 
@@ -223,7 +223,7 @@ dists<-dist.dna(myt_amova,model="raw")
 
 #Test Pt. Conception Hypothesis
 ```{r}
-amova_out<-pegas::amova(formula=dists~ptconception/pop1,nperm=1)
+amova_out<-pegas::amova(formula=dists~pt_conception/pop1,nperm=1)
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
@@ -240,7 +240,7 @@ pt_conception_result<-c(FCT,FSC,FST)
 
 #Test Cape Mendocino Hypothesis
 ```{r}
-amova_out<-pegas::amova(formula=dists~capemendo/pop1,nperm=1)
+amova_out<-pegas::amova(formula=dists~cape_mendo/pop1,nperm=1)
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
@@ -256,40 +256,57 @@ cape_mendo_result<-c(FCT,FSC,FST)
 
 ```
 
-#Test Marko Hypothesis
-```{r}
-amova_out<-pegas::amova(formula=dists~marko/pop1,nperm=1)
-
-
-FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
-FCTp<-amova_out$varcomp[1,2]
-     
-FSC<-amova_out$varcomp[2,1]/(amova_out$varcomp[2,1]+amova_out$varcomp[3,1])
-FSCp<-amova_out$varcomp[2,2]
-      
-FST<-(amova_out$varcomp[1,1]+amova_out$varcomp[2,1])/sum(amova_out$varcomp[,1])
-FSTp<-NA
-
-marko_result<-c(FCT,FSC,FST)
-```
 
 
 
 ```{r}
-AMOVA_result<-cbind(c("Among Regions","Among Populations within Regions", "Among Populations"),pt_conception_result,cape_mendo_result, marko_result)
+AMOVA_result<-cbind(c("Among Regions","Among Populations within Regions", "Among Populations"),pt_conception_result,cape_mendo_result)
 
 kable(AMOVA_result)
 ```
+
+
 #Isolation by Distance
 ```{r}
-myt_metadata<-read.csv("myt_metadata_2.csv")
+#write it out and read it back in so you don't need to calculate it again
+#write.csv(phiST,"phi_st.csv")
+phiST2 <- phiST #read.csv("phi_st.csv")
+phi.dist <- as.dist(phiST2)
+
+myt_metadata<-read.csv("myt_metadata.csv")
 myt_unique<-unique(myt_metadata[,c("locality","decimalLatitude","decimalLongitude")]) #pull out just locality and lat/longs, and get unique values
-myt_unique<-pcoel_unique[order(pcoel_unique$locality),] #put them in alphabetical order
+myt_unique<-myt_unique[order(myt_unique$locality),] #put them in alphabetical order
 
 myt_unique
 ```
 
+```{r}
+install.packages("raster")
+library(raster)
+gdist<-pointDistance(p1=myt_unique[,c(3,2)], lonlat=T,allpairs=T) #measure great circle distance between points in meters
+gdist<-gdist/1000 # convert to km
+gdist<-as.dist(gdist) #convert to distance object
+```
+```{r}
+#pull out PhiST matrix and Mantel's test
+#pair_phi<-as.dist(pairwise_phi$pair.mat$PHIst) #convert phi_st to distance object
+#pair_phi<-pair_phi/(1-pair_phi) #linearize PhiST
+install.packages("ade4")
+library(ade4)
+phi_mantel<-mantel.randtest(pair_phi,gdist)
 
+phi_mantel
+```
+
+```{r}
+plot(gdist,pair_phi)
+identify(gdist,pair_phi) # use this if you want to identify outliers
+
+install.packages("ggplot")
+library(ggplot2)
+phi_plot<-ggplot(as.data.frame(cbind(gdist,pair_phi)), aes(x=gdist,y=pair_phi)) + geom_point() + geom_smooth(method=lm) + xlab("Great Circle Distance(km)") + ylab(expression(Phi["ST"]/1-Phi["ST"]))
+phi_plot
+```
 
 
 #Migrate
