@@ -44,7 +44,11 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
+<<<<<<< HEAD
 myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
+=======
+myt_aln<-read.FASTA("mcalifornianus_mtDNA_alphapops_210514.fasta")
+>>>>>>> 9cf3374a40fdd366590a4cd04ad3e5fe3d6f5f85
 myt_aln
 
 ```
@@ -104,15 +108,19 @@ sorted<-sapply(pop.by.haplo,paste, collapse="")
 haplo<-as.roman(1:153)
 queue<-data.frame(haplotype=as.character(haplo), Population=sorted)
 queue
+myt.div<-nuc.div(myt_aln)
 ```
 
 
+<<<<<<< HEAD
 ```{r}
 #install.packages("pegas")
 library(pegas)
 #this doesn't stratify by population
 myt.div<-nuc.div(myt_aln)
 ```
+=======
+>>>>>>> 9cf3374a40fdd366590a4cd04ad3e5fe3d6f5f85
 
 
 #Diversity Statistics
@@ -223,7 +231,11 @@ dists<-dist.dna(myt_amova,model="raw")
 
 #Test Pt. Conception Hypothesis
 ```{r}
+
 amova_out<-pegas::amova(formula=dists~pt_conception/pop1,nperm=1)
+
+amova_out<-pegas::amova(formula=dists~ptconception/pop1,nperm=1000)
+
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
@@ -240,7 +252,11 @@ pt_conception_result<-c(FCT,FSC,FST)
 
 #Test Cape Mendocino Hypothesis
 ```{r}
+
 amova_out<-pegas::amova(formula=dists~cape_mendo/pop1,nperm=1)
+
+amova_out<-pegas::amova(formula=dists~capemendo/pop1,nperm=1000)
+
 
 
 FCT<-amova_out$varcomp[1,1]/sum(amova_out$varcomp[,1])
