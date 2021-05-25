@@ -43,7 +43,7 @@ names(op.co1) <- str_extract(names(op.co1), pattern = "[A-Z]+[0-9]+[MF]")
 write.FASTA(op.co1, file = "Ort_Pogson_CO1.fasta")
 ```
 
-
+# Redo IBD analysis with new StrataG
 
 ```{r}
 myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
