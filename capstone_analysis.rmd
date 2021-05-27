@@ -44,14 +44,24 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
-<<<<<<< HEAD
 myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
-=======
 myt_aln<-read.FASTA("mcalifornianus_mtDNA_alphapops_210514.fasta")
->>>>>>> 9cf3374a40fdd366590a4cd04ad3e5fe3d6f5f85
 myt_aln
 
 ```
+
+#Seg Sites
+```{r}
+sites <-seg.sites(myt_aln)
+sites
+```
+
+
+```{r}
+nss <-length(sites)
+nss
+```
+
 
 ```{r}
 myt_aln<-as.matrix(myt_aln) #do I need to turn the list into a matrix? EDC-YES
@@ -88,7 +98,7 @@ replot()
 
 
 ```{r}
-ind.hap
+h
 ```
 
 

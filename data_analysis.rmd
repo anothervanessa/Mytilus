@@ -1,5 +1,5 @@
 ---
-title: 'Data Analysis: Investigating the seascape genetics of Mytilus californianus
+title: 'Data Analysis: Investigating the population genetics of Mytilus californianus
   using a coalescent sampler'
 author: "Vanessa Garcia"
 date: "2/19/2021"
@@ -31,15 +31,16 @@ library(rentrez)
 library(stringr)
 library(plyr)
 library(muscle)
+#
 #library(strataG)
-#library(magrittr)
-#library(dplyr)
-#library(Biostrings)
-#library(BiocGenerics)
+library(magrittr)
+library(dplyr)
+library(Biostrings)
+library(BiocGenerics)
 ```
 
 ```{r}
-mussel.dat<-read.FASTA("consensus_sequences_TEST.fasta")
+mussel.dat<-read.FASTA("mcali_alignment_030521.fasta")
 mussel.dat
 ```
 #The samples must be aligned and trimmed so that they are all the same length. 
@@ -63,13 +64,13 @@ mussel.aln<-muscle(mussel.string)
 
 ```{r}
 #visualize variation in alignment
-image.DNAbin(mussel.dat,cex.lab = .5)
+image.DNAbin(mussel.dat,cex.lab = .2)
 ```
 
 ##test alignment with read.dna -> so this imports the already aligned data and puts it into a matrix
 ```{r}
-dog.aln<-read.dna("consensus_sequences_TEST.fasta", format="fasta", as.matrix=T)
-#slightly misaligned
+dog.aln<-read.dna("mcali_alignment_030521.fasta", format="fasta", as.matrix=T)
+
 ```
 
 
@@ -85,7 +86,7 @@ mussel.ss
 ```
 ```{r}
 #Average pairwise differences
-seqs<-sample(1:7,2) #change x to reflect sample size; this collects 2 random samples from sample set
+seqs<-sample(1:15,2) #change x to reflect sample size; this collects 2 random samples from sample set
 seqs
 
 #segregating sites
@@ -114,22 +115,52 @@ mussel.hd # prob that two rando seqs in sample will be diff
 ```
 
 ```{r}
-#Visualizing Seq Variation
-mussel.dist<-dist.dna(dog.aln) #calc dist matrix
-plot(nj(mussel.dist), type="phylo",cex=.8) #plot a neighbor joining tree
-add.scale.bar(x=.005, y=1, length =.0016)
+#Visualizing Seq Variation -- created tree in Geneious
+#mussel.dist<-dist.dna(dog.aln) #calc dist matrix
+
+#plot(nj(mussel.dist), type="phylo",cex=.8) #plot a neighbor joining tree
+#add.scale.bar(x=.005, y=1, length =.0016)
 ```
+```{r}
+#Folded Site Frequency Spectrum
+mytilus_spectrum<- site.spectrum(mussel.dat)
+plot(mytilus_spectrum,col="navy",main= "Folded Site Frequency Spectrum",
+     xlab="Frequency", ylab="Number of SNPs")
+```
+```{r}
+#Charles Pop Code
+pop<-gsub(labels(dog.aln),pattern="([A-Za-z_]+)_\\d+.+",replacement="\\1")
+pop<-gsub(pop,pattern="_",replacement="")
+
+#Charles' Haplotype Code
+d<-dist.dna(dog.aln) # I think this is the right matrix to use
+h<-pegas::haplotype(dog.aln)
+h<-sort(h,what="label")
+net<-pegas::haploNet(h)
+i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
+i<-i[order(i$values),]
+ind.hap<-table(hap=i$ind, pop=pop)
+
+ghost.stories<-
+  c("lightsteelblue1","royalblue4", "royalblue1","steelblue","deepskyblue", "lightskyblue2", "ghostwhite","skyblue4","mintcream","lightgoldenrod","lightgoldenrod2","khaki2","gold1","darkslategrey","darkslateblue","blue4")
+
+plot(net,size=attr(net,"freq"),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
+legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
+replot()
+```
+
+
 ```{r}
 #Haplotype Network- how many subs would be required to go from one to another hap
 
 net<-haploNet(mussel.hap)
 fq<-attr(net,"freq")
-plot(net,size=fq, threshold=0, cex=.5)
+plot(net,size=fq, threshold=0, cex=.8)
 
 sample.no<-attr(mussel.hap, "index")
 pop.by.haplo<-sapply(sample.no, function(x) rownames(dog.aln)[x])
 sorted<-sapply(pop.by.haplo,paste, collapse="")
-haplo<-as.roman(1:12)
+haplo<-as.roman(1:153)
 kable(data.frame(haplotype=as.character(haplo), Population=sorted))
 ```
 
@@ -137,9 +168,9 @@ kable(data.frame(haplotype=as.character(haplo), Population=sorted))
 #Creating Haplotype Network in Popart
 ```{r}
 #Prep for Popart; this needs to be adjusted for my own data
-hapseqs<-h[] # pull out the DNAbin object from the haplotype object and write into nexus format
+hapseqs<-h[h] # pull out the DNAbin object from the haplotype object and write into nexus format
 write.nexus.data(hapseqs,
-                 file="neralb_haplotypes.nex",
+                 file="mcali_haplotypes.nex",
                  interleaved=F)
 #write both haplotypes to csv
 write.csv(ind.hap,
@@ -152,12 +183,16 @@ write.csv(event_info,
           quote=F)
 ```
 
+#Charles div stats
+```{r}
+data_bg<-sequence2gtypes(data_b,strata=pop)
+```
 
 #Diversity Statistics
 ```{r}
 #create copy of dataset 
-data_b <- data
-rownames(data_b)<-pop
+data_b <- dog.aln
+rownames(dog.aln)<-pop
 stratastat<-function(x,pop=pop,fun=nuc.div){
   #this function will calculate stats for a DNAbin object
   #(x), stratified across populations given in a pop.
