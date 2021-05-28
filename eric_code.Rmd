@@ -9,9 +9,11 @@ I'll put my code in this document for now.
 
 ```{r setup}
 library(tidyverse)
-library(rentrez)
 library(adegenet)
 library(ape)
+library(raster)
+library(strataG)
+library(readxl)
 ```
 
 # Ort & Pogson 2007 data
@@ -39,4 +41,113 @@ op <- read.FASTA("Ort_Pogson_2007.fasta")
 op.co1 <- op[str_detect(names(op), pattern = "cox1")]
 names(op.co1) <- str_extract(names(op.co1), pattern = "[A-Z]+[0-9]+[MF]")
 write.FASTA(op.co1, file = "Ort_Pogson_CO1.fasta")
+```
+
+# Redo IBD analysis with new StrataG
+
+```{r}
+myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
+myt_aln<-as.matrix(myt_aln)
+pop<-gsub(labels(myt_aln),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
+pop<-gsub(pop,pattern="_",replacement="")
+
+poporder<-unique(pop)
+
+myt_g<-sequence2gtypes(myt_aln,strata=pop)
+myt_g<-labelHaplotypes(myt_g)
+pairwise<-pairwiseTest(myt_g, model = "raw", nrep=0,quietly = F, max.cores=4)
+pairwise_phi<-as.dist(pairwiseMatrix(pairwise, stat = "PHIst"))
+pairwise_phi <- as.matrix(pairwise_phi)[poporder, poporder]
+pairwise_phi <- pairwise_phi/(1-pairwise_phi)
+pairwise_phi.d <- as.dist(pairwise_phi)
+
+pairwise_fst <- as.dist(pairwiseMatrix(pairwise, stat = "Fst"))
+pairwise_fst <- as.matrix(pairwise_fst)[poporder, poporder]
+pairwise_fst <- pairwise_fst/(1-pairwise_fst)
+pairwise_fst.d <- as.dist(pairwise_fst)
+
+
+
+myt_metadata<-read_xlsx("myt_metadata.xlsx",col_types = c("text","numeric","numeric"))
+#myt_unique<-unique(myt_metadata[,c("locality","decimalLatitude","decimalLongitude")]) #pull out just locality and lat/longs, and get unique values
+myt_metadata <- myt_metadata %>% arrange(desc(decimalLatitude))
+
+
+
+gdist<-pointDistance(p1=myt_metadata[,c(3,2)], lonlat=T,allpairs=T)/1000 #measure great circle distance between points in kilometers
+
+gdist<-as.dist(gdist) #convert to distance object
+
+phi_mantel<-mantel.randtest(pairwise_phi.d,gdist)
+
+phi_plot<- ggplot(tibble(gdist,pairwise_phi.d), aes(x=gdist,y=pairwise_phi.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(Phi["ST"]/1-Phi["ST"]))
+
+phi_plot
+
+fst_plot<- ggplot(tibble(gdist,pairwise_fst.d), aes(x=gdist,y=pairwise_fst.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(F["ST"]/1-F["ST"]))
+
+fst_mantel<-mantel.randtest(pairwise_fst.d,gdist)
+
+
+fst_plot
+
+
+
+```
+
+# MigraiNe Analysis
+
+Migraine comes with a compilable program `Nexus2GP` that converts haplotype numbers to a genepop format. Could be done in R too, but `Nexus2GP` is probably better to ensure its in the right format.
+
+```{r migraine}
+
+write.nexus.data(myt_aln,file = "Mcalifornianus_210524.nex",interleaved=F)
+
+```
+
+Parmfile for Migraine:
+
+```{bash parmfile1}
+
+GenepopFileName=Mcalifornianus_210524-GP.txt
+DemographicModel=LinearIBD
+#next two settings describe total size of the habitat (not just the sampled area), 
+#https://www.gbif.org/species/2285680
+PSONMin=0 0
+PSONMax=XXXX 0
+# Neighborhood size = 50km
+#XXX/50 = GeoBinNbr
+GeoBinNbr=17
+GeoUnit= ind.km
+#alternate way of specifying the habitat, not used for now
+#habitatPars= 0.5 0.5 400 1 0
+#habitatPars=0 0 0 300 0
+#Infinite sites mutation model, will drop sites with more than 2 alleles
+MutationModel=ISM
+
+#sampling - could potentially change the sampling parameters, but not right now
+#samplingSpace=,,
+#samplingScale=,,
+#Analysis - this will do 5 iterations of 100 (30 runs/point) points, 
+#and overwrite them with 5 runs of 250 points
+writeSequence= Over,Over,Over,Over,Over,Append,10
+StatisticSequence=PAC
+PointNumber=100,100,100,100,100,250
+Nrunsperpoint=30,30,30,30,30,50
+#Wide priors on Neu, Nem and g 
+LowerBound=0.1,1,0
+Upperbound=10,10000,1
+oneDimCI= 2Nmu, 2Nm, Nb, condS2
+CoreNbrForR=4
+#Plots= all1DProfiles
+1DProfiles=2Nmu, 2Nm, Nb, condS2, g
+extrascale=Nb=logscale
+graphicFormat=pdf
+#writeAdHocFiles=T
 ```
