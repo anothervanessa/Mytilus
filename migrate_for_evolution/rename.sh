@@ -7,7 +7,7 @@ do
         do
                 cd $m
                 echo $m
-                screen -d -m migrate-n
+                mv parmfile.txt parmfile
                 cd ..
         done
        cd ..

@@ -1,0 +1,29 @@
+Migraine 0.6 (Built on Apr 14 2021 at 21:34:18)
+blackbox, version 1.1.32 loaded
+R code run on  Fri May 28 15:50:00 2021
+
+Data file: ../Mcalifornianus_210524-GP.txt
+Settings file: migraine.txt
+
+Geographic bin width= 52.3067
+Demographic model: IBD 1D
+Canonical parameters: 2Nmu 2Nm g
+* N stands for number of gene copies, 
+    i.e. 2N = 4 x [the number of diploid individuals] *
+
+    Some high profile likelihoods are extrapolated in the 2Nmu, Nb profile
+
+*** Confidence intervals *** 
+
+95%-coverage confidence interval for 2Nmu : [ 2.018 -- 5.148 ]
+95%-coverage confidence interval for 2Nm : [ 52.14 -- NA ]
+95%-coverage confidence interval for Nb : [ 42646 -- 853943216 ]
+
+*** Point estimates *** 
+
+   2Nmu    2Nm      g
+  3.189  317.5  0.659
+
+      Neighborhood: 237546 ind.km
+
+Normal ending.
