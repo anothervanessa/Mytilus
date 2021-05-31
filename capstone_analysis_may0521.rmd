@@ -184,13 +184,14 @@ phi.dist <- as.dist(phiST)
 
 #Migrate
 ```{r}
-install.packages(c("phyclust", "phangorn"))
-install.packages("TeachingPopGen")
+#install.packages(c("phyclust", "phangorn"))
+#install.packages("TeachingPopGen")
 library(phyclust)
 library(phangorn)
 library(knitr)
+library(ape)
 
-tf_co1<-read.dna("consensus_sequences_TEST.fasta", format="fasta",as.matrix=TRUE)
+tf_co1<-read.dna("migrate_seqs.fasta", format="fasta",as.matrix=TRUE)
 tf_co1
 co1_phy<-phyDat(tf_co1)
 co1_model1test<-co1_modeltest[order(co1_model1test$BIC),]
