@@ -1,0 +1,35 @@
+GenepopFileName=../Mcalifornianus_210524-GP.txt
+#NexusFileName=Mcalifornianus_210524.txt
+DemographicModel=LinearIBD
+#next two settings describe total size of the habitat (not just the sampled area), 
+#https://www.gbif.org/species/2285680
+PSONMin=0 0
+PSONMax=3800 0
+# Neighborhood size = 50km
+#3800/50 = GeoBinNbr
+GeoBinNbr=78
+GeoUnit= ind.km
+#alternate way of specifying the habitat, not used for now
+#habitatPars= 0.5 0.5 400 1 0
+#habitatPars=0 0 0 300 0
+#Infinite sites mutation model, will drop sites with more than 2 alleles
+MutationModel=PIM
+#sampling - could potentially change the sampling parameters, but not right now
+#samplingSpace=,,
+#samplingScale=,,
+#Analysis - this will do 5 iterations of 100 (30 runs/point) points, 
+#and overwrite them with 5 runs of 250 points
+writeSequence= Over,Over,Over,Over,Over,Append,10
+StatisticSequence=PAC
+PointNumber=100,100,100,100,100,250
+Nrunsperpoint=30,30,30,30,30,50
+#Wide priors on Neu, Nem and g 
+LowerBound=0.1,1,0
+Upperbound=20,1500,1
+oneDimCI= 2Nmu, 2Nm, Nb
+CoreNbrForR=4
+#Plots= all1DProfiles
+1DProfiles=2Nmu, 2Nm, Nb, g
+extrascale=Nb=logscale
+graphicFormat=pdf
+writeAdHocFiles=T
