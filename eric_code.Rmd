@@ -120,10 +120,10 @@ DemographicModel=LinearIBD
 #next two settings describe total size of the habitat (not just the sampled area), 
 #https://www.gbif.org/species/2285680
 PSONMin=0 0
-PSONMax=XXXX 0
+PSONMax=3800 0
 # Neighborhood size = 50km
-#XXX/50 = GeoBinNbr
-GeoBinNbr=17
+#3800/50 = GeoBinNbr
+GeoBinNbr=76
 GeoUnit= ind.km
 #alternate way of specifying the habitat, not used for now
 #habitatPars= 0.5 0.5 400 1 0
@@ -150,4 +150,24 @@ CoreNbrForR=4
 extrascale=Nb=logscale
 graphicFormat=pdf
 #writeAdHocFiles=T
+```
+
+
+
+I used the following script to automagically set up a screen and run migrate in each sub-directory
+```{bash screen_migrate.sh}
+#!
+for s in */
+do
+       cd $s
+
+        for m in */
+        do
+                cd $m
+                echo $m
+                screen -d -m migrate-n
+                cd ..
+        done
+       cd ..
+#done
 ```
