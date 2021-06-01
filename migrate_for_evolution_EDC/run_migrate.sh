@@ -7,7 +7,7 @@ do
         do
                 cd $m
                 echo $m
-                screen -d -m ~/migrate-n
+                screen -d -m migrate-n
                 cd ..
         done
        cd ..
