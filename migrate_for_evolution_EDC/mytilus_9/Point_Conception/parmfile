@@ -14,7 +14,7 @@ weights=NO
 interleaved=NO
 fast-likelihood=NO
 inheritance-scalars={1}
-population-relabel={1 1 2 2 3 3 4 4 4 4 4 4}
+population-relabel={1 1 1 1 1 1 1 1 2 2 2 2}
 usertree=RANDOMTREE
 infile=../../mcalifornianus_210528.mig
 random-seed=AUTO
@@ -38,10 +38,9 @@ migration=own:{100000}
 mutation=CONSTANT
 fst-type=THETA
 custom-migration={
-*	*	0	0	0
-*	*	*	0	0
-0	*	*	*	0
-0	0	*	*	*}
+*	*	
+*   *
+}
 geo=NO
 bayes-update=YES
 bayes-updatefreq=0.500000
