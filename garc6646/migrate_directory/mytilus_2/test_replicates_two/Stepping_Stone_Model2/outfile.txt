@@ -1,0 +1,278 @@
+  ===================================================================================
+   Preliminary migrate analysis of M. californianus CO1 haplotypes for Evolution 2021
+  ===================================================================================
+  MIGRATION RATE AND POPULATION SIZE ESTIMATION
+  using Markov Chain Monte Carlo simulation
+  ===================================================================================
+  Version 3.7.2
+
+  Program started at Fri May 28 15:33:28 2021
+         finished at Sat May 29 00:20:02 2021
+     
+
+
+Options in use:
+---------------
+
+Analysis strategy is BAYESIAN INFERENCE
+
+Proposal distribution:
+Parameter group          Proposal type
+-----------------------  -------------------
+Population size (Theta)  Metropolis sampling
+Migration rate      (M)       Slice sampling
+
+
+Prior distribution (Proposal-delta will be tuned to acceptance frequency of 0.440000):
+Parameter group          Prior type   Minimum    Mean(*)    Maximum    Delta
+-----------------------  ------------ ---------- ---------- ---------- ----------
+Population size (Theta)   Exp window  0.000010   0.010000  10.000000   1.000000 
+Migration rate      (M)   Exp window  0.000100  100000.000 1000000.00 100000.000
+
+
+
+Datatype: DNA sequence data
+
+Inheritance scalers in use for Thetas (specified scalars=1)
+1.00 
+[Each Theta uses the (true) ineritance scalar of the first locus as a reference]
+
+
+Pseudo-random number generator: Mersenne-Twister                                
+Random number seed (with internal timer)           2393141522
+
+Start parameters:
+   First genealogy was started using a random tree
+   Theta values were generated  from guessed values
+   Theta = 0.01000
+   M values were generated from guessed values
+   M-matrix: 100000.00 [all are the same]
+
+Migration model: Arbitrary migration matrix model            
+[Legend: m = average (average over a group of Thetas or M]
+[s = symmetric M, S = symmetric 4Nm,
+ 0 = zero, and not estimated,   ]
+[* = free to vary, Thetas are on diagonal]
+   ElfinCo     * * 0 0 0 0 0 0 0 0 0 0 
+   Bamfiel     * * * 0 0 0 0 0 0 0 0 0 
+   PortRen     0 * * * 0 0 0 0 0 0 0 0 
+   WalkOnB     0 0 * * * 0 0 0 0 0 0 0 
+   BodegaH     0 0 0 * * * 0 0 0 0 0 0 
+   Davenpo     0 0 0 0 * * * 0 0 0 0 0 
+   VistaDe     0 0 0 0 0 * * * 0 0 0 0 
+   HazardR     0 0 0 0 0 0 * * * 0 0 0 
+   Refugio     0 0 0 0 0 0 0 * * * 0 0 
+   Carpint     0 0 0 0 0 0 0 0 * * * 0 
+   WhitePo     0 0 0 0 0 0 0 0 0 * * * 
+               0 0 0 0 0 0 0 0 0 0 * * 
+
+
+
+Mutation rate is constant 
+
+Markov chain settings:
+   Long chains (long-chains):                              1
+      Steps sampled (inc*samples*rep):                300000
+      Steps recorded (sample*rep):                      3000
+   Combining over replicates:                              3
+   Static heating scheme
+      4 chains with  temperatures
+       1.00, 1.50, 3.00,100000.00
+      Swapping interval is 1
+   Burn-in per replicate (samples*inc):               100000
+
+Print options:
+   Data file:                ../../mcalifornianus_210528.mig
+   Output file (ASCII text):                     outfile.txt
+   Output file (PDF):        mcalifornianus_210528_outfile.p
+   Posterior distribution:                         bayesfile
+   All values of Post.Dist:                     bayesallfile
+   Print data:                                            No
+   Print genealogies:                                     No
+   Plot data: No                                            
+
+Summary of data:
+Title: Preliminary migrate analysis of M. californianus CO1 
+Data file:                   ../../mcalifornianus_210528.mig
+Datatype:                                      Sequence data
+Number of loci:                                            1
+
+Population                   Locus   Gene copies    
+----------------------------------------------------
+  1 ElfinCo                      1        19
+  2 Bamfiel                      1        23
+  3 PortRen                      1        15
+  4 WalkOnB                      1        16
+  5 BodegaH                      1         7
+  6 Davenpo                      1        17
+  7 VistaDe                      1        19
+  8 HazardR                      1        23
+  9 Refugio                      1        16
+ 10 Carpint                      1        19
+ 11 WhitePo                      1        10
+ 12                              1         0
+    Total of all populations     1       184
+
+
+Empirical Base Frequencies
+------------------------------------------------------------
+Locus     Nucleotide                        Transition/
+          ------------------------------  Transversion ratio
+          A       C       G       T(U)
+------------------------------------------------------------
+   1      0.2986  0.1601  0.2036  0.3377       4.82353
+
+Region type     Rate of change    Probability
+---------------------------------------------
+        1           0.001            0.598
+        2           0.051            0.362
+        3           0.451            0.040
+        4           3.498            0.001
+
+
+
+
+
+
+Bayesian estimates
+==================
+
+Locus Parameter        2.5%      25.0%    mode     75.0%   97.5%     median   mean
+-----------------------------------------------------------------------------------
+    1  Theta_1         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.02000
+    1  Theta_2         0.00001  0.00001  0.01001  0.06001  0.18001  0.07001  0.02692
+    1  Theta_3         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01903
+    1  Theta_4         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.02025
+    1  Theta_5         0.00001  0.00001  0.01001  0.06001  0.18001  0.07001  0.02354
+    1  Theta_6         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01546
+    1  Theta_7         0.00001  0.00001  0.01001  0.06001  0.18001  0.07001  0.02956
+    1  Theta_8         0.00001  0.00001  0.01001  0.06001  0.18001  0.07001  0.02401
+    1  Theta_9         0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01515
+    1  Theta_10        0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.00994
+    1  Theta_11        0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.00936
+    1  Theta_12        0.00001  0.00001  0.01001  0.06001  0.16001  0.07001  0.01171
+    1  M_2->1         22000.00 32000.00 47000.00 60000.00 70000.00 57000.00 87012.30
+    1  M_1->2         34000.00 46000.00 57000.00 66000.00 120000.00 79000.00 77773.74
+    1  M_3->2             0.00     0.00  9000.00 20000.00 28000.00 21000.00 38176.09
+    1  M_2->3         58000.00 68000.00 83000.00 98000.00 130000.00 79000.00 67536.03
+    1  M_4->3         22000.00 42000.00 55000.00 66000.00 82000.00 57000.00 53789.77
+    1  M_3->4         10000.00 20000.00 35000.00 48000.00 74000.00 41000.00 41594.94
+    1  M_5->4         36000.00 48000.00 65000.00 80000.00 94000.00 75000.00 100694.80
+    1  M_4->5         34000.00 46000.00 63000.00 76000.00 86000.00 55000.00 46892.67
+    1  M_6->5             0.00     0.00  7000.00 20000.00 98000.00 51000.00 44859.56
+    1  M_5->6             0.00     0.00 13000.00 24000.00 84000.00 53000.00 57712.09
+    1  M_7->6         78000.00 88000.00 105000.00 120000.00 130000.00 99000.00 75863.35
+    1  M_6->7             0.00  4000.00 19000.00 32000.00 72000.00 31000.00 32618.90
+    1  M_8->7         14000.00 26000.00 63000.00 72000.00 82000.00 67000.00 77750.62
+    1  M_7->8          2000.00 12000.00 21000.00 36000.00 70000.00 55000.00 63977.87
+    1  M_9->8             0.00     0.00  1000.00  8000.00 30000.00  9000.00  8206.19
+    1  M_8->9             0.00     0.00  9000.00 22000.00 28000.00 79000.00 72083.29
+    1  M_10->9         4000.00 16000.00 29000.00 64000.00 78000.00 59000.00 85719.67
+    1  M_9->10         8000.00 18000.00 29000.00 40000.00 50000.00 137000.00 113091.72
+    1  M_11->10       68000.00 80000.00 99000.00 128000.00 156000.00 97000.00 85902.54
+    1  M_10->11           0.00     0.00  1000.00 22000.00 50000.00 31000.00 44211.59
+    1  M_12->11       46000.00 56000.00 71000.00 84000.00 112000.00 67000.00 58511.26
+    1  M_11->12       20000.00 22000.00 49000.00 86000.00 92000.00 567000.00 473905.44
+-----------------------------------------------------------------------------------
+
+
+
+Log-Probability of the data given the model (marginal likelihood = log(P(D|thisModel))
+--------------------------------------------------------------------
+[Use this value for Bayes factor calculations:
+BF = Exp[log(P(D|thisModel) - log(P(D|otherModel)]
+shows the support for thisModel]
+
+
+
+(1a) Thermodynamic integration: log(Prob(D|Model))=-2152.895891 (-2082.741170 with Bezier-approximation[1b]) 
+(2) Harmonic mean:             log(Prob(D|Model))=-1836.515053
+(1) and (2) should give a similar result, in principle.
+But (2) is overestimating the likelihood, it and is presented for historical reasons and should not be used. But (1) needs heating with chains that span a temperature range of 1.0 to at least 100,000.
+
+MCMC run characteristics
+========================
+
+
+
+
+Acceptance ratios for all parameters and the genealogies
+---------------------------------------------------------------------
+
+Parameter           Accepted changes               Ratio
+Theta_1                   1055/4424              0.23847
+Theta_2                    689/4391              0.15691
+Theta_3                   1936/4378              0.44221
+Theta_4                   2000/4425              0.45198
+Theta_5                   1564/4476              0.34942
+Theta_6                   2079/4407              0.47175
+Theta_7                    792/4393              0.18029
+Theta_8                    252/4401              0.05726
+Theta_9                   2420/4412              0.54850
+Theta_10                  2653/4352              0.60960
+Theta_11                  1721/4563              0.37716
+Theta_12                  3315/4451              0.74478
+M_2->1                    4358/4358              1.00000
+M_1->2                    4267/4267              1.00000
+M_3->2                    4419/4419              1.00000
+M_2->3                    4296/4296              1.00000
+M_4->3                    4380/4380              1.00000
+M_3->4                    4362/4362              1.00000
+M_5->4                    4425/4425              1.00000
+M_4->5                    4346/4346              1.00000
+M_6->5                    4446/4446              1.00000
+M_5->6                    4486/4486              1.00000
+M_7->6                    4429/4429              1.00000
+M_6->7                    4312/4312              1.00000
+M_8->7                    4410/4410              1.00000
+M_7->8                    4341/4341              1.00000
+M_9->8                    4506/4506              1.00000
+M_8->9                    4491/4491              1.00000
+M_10->9                   4461/4461              1.00000
+M_9->10                   4397/4397              1.00000
+M_11->10                  4475/4475              1.00000
+M_10->11                  4455/4455              1.00000
+M_12->11                  4516/4516              1.00000
+M_11->12                  4492/4492              1.00000
+Genealogies              37259/149857            0.24863
+Autocorrelation and Effective sample size
+-------------------------------------------------------------------
+
+  Parameter         Autocorrelation      Effective Sample size
+  ---------         ---------------      ---------------------
+  Theta_1                0.82972               287.93
+  Theta_2                0.91610               136.40
+  Theta_3                0.62763               705.32
+  Theta_4                0.64904               697.67
+  Theta_5                0.69422               593.09
+  Theta_6                0.66172               650.29
+  Theta_7                0.86492               223.10
+  Theta_8                0.98053                29.48
+  Theta_9                0.57837               837.14
+  Theta_10                0.50757               994.17
+  Theta_11                0.69399               589.47
+  Theta_12                0.42404              1265.32
+  M_2->1                 0.81022               319.40
+  M_1->2                 0.82138               301.47
+  M_3->2                 0.79415               352.58
+  M_2->3                 0.83704               279.16
+  M_4->3                 0.83085               280.28
+  M_3->4                 0.70190               547.55
+  M_5->4                 0.84696               251.07
+  M_4->5                 0.78489               363.40
+  M_6->5                 0.89377               168.35
+  M_5->6                 0.88696               180.11
+  M_7->6                 0.77998               375.72
+  M_6->7                 0.72273               491.75
+  M_8->7                 0.83469               273.13
+  M_7->8                 0.85797               233.22
+  M_9->8                 0.72268               493.04
+  M_8->9                 0.81659               304.85
+  M_10->9                 0.76025               413.35
+  M_9->10                 0.69254               562.43
+  M_11->10                 0.83034               280.64
+  M_10->11                 0.76206               407.55
+  M_12->11                 0.73541               472.98
+  M_11->12                 0.81630               318.51
+  Ln[Prob(D|P)]          0.98047                29.60
+
