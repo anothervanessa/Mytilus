@@ -5,13 +5,173 @@ output: html_notebook
 
 This is code, originally developed for Crandall et al. 2019, to read through Migrate outputs.
 
-```{r}
-plot(cars)
+```{r setup}
+library(tidyverse)
+library(perm)
+library(igraph)
+library(network)
+library(readxl)
+
+
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+## Function for bayes factor calculations
+```{r bfcalcs}
+# a function for calculating model selection statistics
+bfcalcs<-function(df,ml="bezier.corrected"){
+  df$thermodynamic<-as.numeric(df$thermodynamic)
+  df$bezier.corrected<-as.numeric(df$bezier.corrected)
+  df$harmonic<-as.numeric(df$harmonic)
+    mlcol<-df[,ml] 
+	bmvalue<-mlcol[which.max(mlcol)]
+	lbf<-2*(mlcol-bmvalue)
+	choice<-rank(-mlcol)
+	modelprob<-exp(lbf/2)/sum(exp(lbf/2))
+	dfall<-cbind(df,lbf,choice,modelprob)
+	return(dfall)
+}	
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+## Harvesting Likelihoods
 
+```{r harvest_likelihoods}
+wd<-"~/github/Mytilus/migrate_for_evolution/"
+setwd(wd)
+m<-c("Panmixia","Island","Point_Conception","Symmetrical_Stepping_Stone",
+     "Stepping_Stone_CC","Stepping_Stone")
+
+
+
+likelists<-list()
+for(r in 1:20){
+  wd1<-paste(wd,"mytilus_",r,sep="")
+  setwd(wd1)
+  # start here if you just want to do one list
+  likelist <- list() #initialize an empty list
+  marglike <- data.frame(model=character(0),thermodynamic=numeric(0),
+                         bezier.corrected=numeric(0),
+                         harmonic.mean=numeric(0),stringsAsFactors=F)  
+  l=1 #initialize l
+    for(i in m){ #i<-"stepping_stone"
+      
+
+      wd3<-file.path(wd1,i)
+      print(wd3)
+      if(!file.exists(wd3)){next}
+      setwd(wd3)
+      outfile<-scan(file="outfile.txt",what="character",sep="\n") #scan in the outfile, separating at each newline
+      
+      #get the result from thermodynamic integration
+      thermoline<-grep("(1a)",outfile,value=T) #find the line with the thermodynamic likelihood on it
+      if(length(thermoline)==0){next}
+      thermoline<-strsplit(thermoline,split="=",fixed=T) #split it up
+      thermo<-as.numeric(substr(thermoline[[1]][2],start=1,stop=12)) #grab the thermodynamic likelihood
+      bezistart <- grep("\\(",strsplit(thermoline[[1]][2],split="")[[1]])+1
+      bezier<-as.numeric(substr(thermoline[[1]][2],start=bezistart,stop=bezistart+11)) #and the bezier-corrected value
+      #get the harmonic mean
+      harmoline<-grep("\\(2\\) H",outfile,value=T) #find the line with harmonic mean likelihood on it
+      harmoline<-strsplit(harmoline,split="=",fixed=T) #grab the harmonic mean
+      harmo<-as.numeric(substr(harmoline[[1]][2],start=1,stop=12))
+      marglike[l,]<-c(i,thermo,bezier,harmo) #add this as a row to the data frame
+      l=l+1
+      likelist<-marglike #add the dataframe to the list
+    }
+  
+# stop here if you just want one round  
+  likelists[[r]]<-likelist
+}
+setwd(wd)
+```
+
+## Model Selection
+On each round, and then bind them into a list, then convert to a dataframe. Take the mean and SD, and then perform model selection on this summarized table. 
+
+```{r model_selection}
+
+modeltable <- map(likelists, bfcalcs) %>% bind_rows(.id="Replicate")
+
+
+mytilus_summary <- modeltable %>% group_by(model) %>% summarize(Marg_Like = mean(bezier.corrected), 
+                                                     Marg_Like_SD = sd(bezier.corrected)) %>% 
+                                                      mutate(Rank = rank(-Marg_Like)) %>% 
+                                                      mutate(lbf = 2*(Marg_Like - max(Marg_Like))) %>% 
+                                                      mutate(modelprob = exp(lbf/2)/sum(exp(lbf/2)))
+
+                                     
+                                        
+ttest<-permTS(x=modeltable$bezier.corrected[which(modeltable$model=="Stepping_Stone_CC")],
+              y=modeltable$bezier.corrected[which(modeltable$model=="Panmixia")], 
+              alternative="greater", method="exact.mc")
+ 
+kmeans.test<-permKS(x = modeltable$bezier.corrected, g = modeltable$model, 
+                   method="exact.mc")
+
+write.csv(mytilus_summary,file="BestModeltable_Means_of_20reps.csv")
+
+margLplot <- ggplot(data=modeltable, aes(x=model,y=bezier.corrected)) + geom_violin() +
+      geom_point(color="blue",size=0.5) + scale_x_discrete(drop=FALSE) +
+      geom_point(data = mytilus_summary, aes(x=model, y=Marg_Like)) +
+      theme(axis.text.y = element_text(size=16),legend.position="none",
+          axis.title.x=element_text(size=16),axis.title.y=element_blank(),
+          plot.title=element_text(size=20)) +
+          ylab("Marginal Log-Likelihood") +
+          coord_fixed(0.1)+ coord_flip()
+  
+ ggsave(filename="Migrate_Violins_20reps.pdf", plot = margLplot)
+
+
+```
+
+
+# Make Metapopulation Model Figures
+
+```{r}
+
+
+
+#nodes<-read_xlsx("myt_metadata.xlsx",col_types = c("text","numeric","numeric")) %>% 
+nodes <- read_csv("myt_metadata.csv") %>%   
+        slice(4:15) %>% arrange(desc(decimalLatitude)) %>% mutate(vertex = 1:12)
+
+stepedges<-read.csv("step_edges.csv",header=F)
+colrs<-c("black","gray50")
+
+#island model make all possible connections
+
+edges<-t(combn(x=nodes$vertex,m=2))
+# and the reverse
+edges2<-rbind(edges,edges[,c(2,1)])
+
+#make the n-island model
+west_side <- as.matrix(nodes[,c(3,2)])
+island<-graph_from_data_frame(edges2,directed=T)
+
+#circle<-layout_in_circle(island,order=c(11,10,9,8,7,6,5,4,3,2,1,14,13,12))
+
+
+#make a stepping-stone model
+stepstone<-graph_from_data_frame(stepedges,directed=T)
+#make southward stepping-stone model
+cc_stepedges <- stepedges[seq(1,22,2),]
+cc_stepstone <- graph_from_data_frame(cc_stepedges, directed=T)
+
+#can't figure out why it won't draw arrows
+
+plot(island,layout=west_side, edge.arrow.size=0.05, edge.curved=0.3, 
+     vertex.label=V(island)$locality, 
+     vertex.size=8,vertex.label.cex=0.7,vertex.shape="csquare")
+
+plot(stepstone,layout=west_side, edge.arrow.size=0.05, edge.curved=0.3, 
+     vertex.label=V(stepstone)$label, vertex.color=V(stepstone)$sector,
+     edge.color="black",vertex.label.cex=0.7,vertex.size=8, arrow.mode = 1, arrow.size=1000)
+
+plot(cc_stepstone,layout=west_side, edge.arrow.size=0.05, edge.curved=0.3, 
+     vertex.label=V(stepstone)$label, vertex.color=V(stepstone)$sector,
+     edge.color="black",vertex.label.cex=0.7,vertex.size=8, arrow.mode = 2, arrow.size=5)
+
+
+
+
+
+```
