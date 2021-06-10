@@ -24,7 +24,7 @@ install.packages("strataG")
 ```
 
 ```{r}
-library(knitr)
+#library(knitr)
 library(ape)
 library(pegas)
 library(rentrez)
@@ -44,8 +44,8 @@ library(BiocGenerics)
 
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
+#myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
 myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
-myt_aln<-read.FASTA("mcalifornianus_mtDNA_alphapops_210514.fasta")
 myt_aln
 
 ```
@@ -89,7 +89,10 @@ i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
 i<-i[order(i$values),]
 ind.hap<-table(hap=i$ind, pop=pop)
 
-ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","steelblue", "lightsteelblue1", "lightskyblue2", "mintcream","lightgoldenrod","lightgoldenrod2")
+ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","steelblue", "lightsteelblue1", "lightskyblue2", "mintcream","lightgoldenrod")
+
+ind.hap <- ind.hap[,c(5,1,8,11,2,4,12,7,3,9,6,10)]
+ind.hap
 
 plot(net,size=attr(net,"freq"),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
 legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
@@ -408,5 +411,11 @@ bfcalcs<-function(df,ml="bezier.corrected"){
 bftable<-bfcalcs(marlike)
 kable(bftable)
 write.csv(bftable,"model_selection_table.csv")
+```
+
+
+##Map of West Coast
+```{r}
+
 ```
 

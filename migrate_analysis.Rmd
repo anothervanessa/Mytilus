@@ -6,9 +6,12 @@ output: html_notebook
 This is code, originally developed for Crandall et al. 2019, to read through Migrate outputs.
 
 ```{r setup}
+#install.packages("tidyverse")
 library(tidyverse)
 library(perm)
 library(igraph)
+install.packages("network")
+install.packages("readxl")
 library(network)
 library(readxl)
 
@@ -36,7 +39,8 @@ bfcalcs<-function(df,ml="bezier.corrected"){
 ## Harvesting Likelihoods
 
 ```{r harvest_likelihoods}
-wd<-"~/github/Mytilus/migrate_for_evolution/"
+#wd<-"~/github/Mytilus/migrate_for_evolution/"
+wd<-"~/Mytilus_Project/Code/Mytilus/migrate_for_evolution/"
 setwd(wd)
 m<-c("Panmixia","Island","Point_Conception","Symmetrical_Stepping_Stone",
      "Stepping_Stone_CC","Stepping_Stone")
@@ -84,6 +88,9 @@ for(r in 1:20){
 setwd(wd)
 ```
 
+
+
+
 ## Model Selection
 On each round, and then bind them into a list, then convert to a dataframe. Take the mean and SD, and then perform model selection on this summarized table. 
 
@@ -116,11 +123,37 @@ margLplot <- ggplot(data=modeltable, aes(x=model,y=bezier.corrected)) + geom_vio
           axis.title.x=element_text(size=16),axis.title.y=element_blank(),
           plot.title=element_text(size=20)) +
           ylab("Marginal Log-Likelihood") +
-          coord_fixed(0.1)+ coord_flip()
+          coord_fixed(0.1) #+ coord_flip() apply after gg.gap
   
  ggsave(filename="Migrate_Violins_20reps.pdf", plot = margLplot)
 
 
+```
+
+#Modify margLplot using discontinuous axis code
+```{r}
+#if(!require(gg.gap)) install.packages("gg.gap")
+#library(gg.gap)
+
+# we need to tweak the theme a bit to make it look nice
+# and we need to do it before we pass the plot to gg.gap
+gapped.figure <- margLplot +
+  theme(
+    panel.background = element_rect(fill = "white"), 
+    panel.grid = element_blank(),
+    axis.line = element_blank()
+  )
+
+gapped.figure %>% 
+  gg.gap::gg.gap(
+    ylim = c(-2300, -2050), 
+    segments = list(c(-2250, -2200)),
+    tick_width = 150,
+    c(0.7,0,0.3)
+  )
+gapped.figure
+
+final_margL_figure <- gapped.figure + coord_flip()
 ```
 
 
@@ -175,3 +208,7 @@ plot(cc_stepstone,layout=west_side, edge.arrow.size=0.05, edge.curved=0.3,
 
 
 ```
+
+
+
+
