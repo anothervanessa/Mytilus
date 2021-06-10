@@ -45,7 +45,11 @@ library(BiocGenerics)
 ```{r}
 #dog.aln<-read.dna("mcali_revised.fasta", format="fasta", as.matrix=T)
 #myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
+<<<<<<< HEAD
 myt_aln<-read.FASTA("lat_sorted_seqs.fasta")
+=======
+myt_aln<-read.FASTA("mcalifornianus_mtDNA_alphapops_210514.fasta")
+>>>>>>> b663c8de836e562f4b7c19900cc0670ef887133c
 myt_aln
 
 ```
@@ -93,6 +97,8 @@ ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deeps
 
 ind.hap <- ind.hap[,c(5,1,8,11,2,4,12,7,3,9,6,10)]
 ind.hap
+
+indhap <- indhap[,c(5,1,8,)]
 
 plot(net,size=attr(net,"freq"),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
 legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
