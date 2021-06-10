@@ -14,6 +14,7 @@ install.packages("network")
 install.packages("readxl")
 library(network)
 library(readxl)
+library(gg.gap)
 
 
 ```
@@ -116,6 +117,8 @@ kmeans.test<-permKS(x = modeltable$bezier.corrected, g = modeltable$model,
 
 write.csv(mytilus_summary,file="BestModeltable_Means_of_20reps.csv")
 
+modeltable$model <- factor(modeltable$model, levels = unique(modeltable$model))
+
 margLplot <- ggplot(data=modeltable, aes(x=model,y=bezier.corrected)) + geom_violin() +
       geom_point(color="blue",size=0.5) + scale_x_discrete(drop=FALSE) +
       geom_point(data = mytilus_summary, aes(x=model, y=Marg_Like)) +
@@ -123,39 +126,27 @@ margLplot <- ggplot(data=modeltable, aes(x=model,y=bezier.corrected)) + geom_vio
           axis.title.x=element_text(size=16),axis.title.y=element_blank(),
           plot.title=element_text(size=20)) +
           ylab("Marginal Log-Likelihood") +
-          coord_fixed(0.1) #+ coord_flip() apply after gg.gap
-  
- ggsave(filename="Migrate_Violins_20reps.pdf", plot = margLplot)
+          coord_fixed(0.1) +
+          theme(axis.text.x=(element_text(angle = 90, vjust=1)))
 
-
-```
-
-#Modify margLplot using discontinuous axis code
-```{r}
-#if(!require(gg.gap)) install.packages("gg.gap")
-#library(gg.gap)
-
-# we need to tweak the theme a bit to make it look nice
-# and we need to do it before we pass the plot to gg.gap
-gapped.figure <- margLplot +
-  theme(
-    panel.background = element_rect(fill = "white"), 
-    panel.grid = element_blank(),
-    axis.line = element_blank()
+MargL.gapped <- margLplot %>% 
+  gg.gap(
+    ylim = c(-2300, -2100), 
+    segments = list(c(-2250,-2180)),
+    #tick_width = 150,
+    #c(0.7,0,0.3)
   )
 
-gapped.figure %>% 
-  gg.gap::gg.gap(
-    ylim = c(-2300, -2050), 
-    segments = list(c(-2250, -2200)),
-    tick_width = 150,
-    c(0.7,0,0.3)
-  )
-gapped.figure
+ggsave(filename="Migrate_Violins_20reps_gapped.pdf", plot = MargL.gapped, height = 8, width=5, units="in")
+ggsave(filename="Migrate_Violins_20reps_gapped2.pdf", plot = MargL.gapped, height = 8, width=8, units="in")
 
-final_margL_figure <- gapped.figure + coord_flip()
+# not working, splits it into two side-by-side plots
+#final_margL_figure <- gapped.figure +  theme(
+#    panel.background = element_rect(fill = "white"), 
+#    panel.grid = element_blank(),
+#    axis.line = element_blank()) + 
+#      coord_flip()
 ```
-
 
 # Make Metapopulation Model Figures
 
