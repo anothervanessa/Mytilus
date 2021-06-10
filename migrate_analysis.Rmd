@@ -94,9 +94,11 @@ setwd(wd)
 ## Model Selection
 On each round, and then bind them into a list, then convert to a dataframe. Take the mean and SD, and then perform model selection on this summarized table. 
 
+
+
 ```{r model_selection}
 
-modeltable <- map(likelists, bfcalcs) %>% bind_rows(.id="Replicate")
+modeltable <- map_dfr(likelists, bfcalcs, .id="Replicate")
 
 
 mytilus_summary <- modeltable %>% group_by(model) %>% summarize(Marg_Like = mean(bezier.corrected), 

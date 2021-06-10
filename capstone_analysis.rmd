@@ -85,10 +85,12 @@ image.DNAbin(myt_aln,cex.lab = .2)
 
 ```{r}
 #Haplotype Code
+
 d<-dist.dna(myt_aln) # I think this is the right matrix to use
 h<-pegas::haplotype(myt_aln)
 h<-sort(h,what="label")
-net<-pegas::haploNet(h)
+#net<-pegas::haploNet(h)
+net<-pegas::mst(h)
 i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
 i<-i[order(i$values),]
 ind.hap<-table(hap=i$ind, pop=pop)
@@ -98,11 +100,14 @@ ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deeps
 ind.hap <- ind.hap[,c(5,1,8,11,2,4,12,7,3,9,6,10)]
 ind.hap
 
-indhap <- indhap[,c(5,1,8,)]
 
-plot(net,size=attr(net,"freq"),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
+pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
+plot(net,size=(attr(net,"freq")/5),scale.ratio=4,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
 legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
-replot()
+
+
+dev.off()
+
 ```
 
 
