@@ -136,15 +136,7 @@ myt.div<-nuc.div(myt_aln)
 ```
 
 
-<<<<<<< HEAD
-```{r}
-#install.packages("pegas")
-library(pegas)
-#this doesn't stratify by population
-myt.div<-nuc.div(myt_aln)
-```
-=======
->>>>>>> 9cf3374a40fdd366590a4cd04ad3e5fe3d6f5f85
+
 
 
 #Diversity Statistics
