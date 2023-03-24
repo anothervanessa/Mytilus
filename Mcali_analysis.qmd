@@ -105,7 +105,7 @@ pairwise_fst <- pairwise_fst[locorder, locorder]
 #pairwise_fst <- pairwise_fst/(1-pairwise_fst)
 pairwise_fst.d <- as.dist(pairwise_fst)
 
-heatmap(phiST)
+heatmap(pairwise_phi)
 
 write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
 write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
@@ -193,3 +193,40 @@ quote=F)
 #write the flattened metadata too.
 write.csv(event_info, file="neralb_event_metadata.csv",
 quote=F)
+```
+
+
+# Migrate
+
+## Preparing the data for migrate
+
+```{r}
+# convert to Phangorn
+myt_phy <- phyDat(myt_aln)
+# create a Jukes-Cantor distance matrix from all sequences
+dm <- dist.ml(myt_phy, model ="JC69")
+#create a neighbor-joining tree from the distance matrix
+tree <- NJ(dm)
+
+mcali_modeltest<-modelTest(myt_phy, tree,G=T, I=F)
+
+mcali_modeltest<-mcali_modeltest[order(mcali_modeltest$BIC),]
+
+head(mcali_modeltest)
+# some funky code to get the gamma shape parameter
+env <- attr(mcali_modeltest, "env")
+TIM1 <- get("TIM1+G(4)", env)
+#eval(HKY, env=env)
+shape <- 0.26375833217876
+
+plot(density(rgamma(1000,shape=shape)), xlim=c(0,1))
+phangorn:::discrete.gamma(shape,4)#shapeparam
+migrate_rates <- c(0.002815926, 0.076790475, 0.529615964, 3.390777635)
+#TiTvRatio(mcali) #need strataG for this
+
+# pml(tree = `tree_TIM1+G(4)`, data = data, bf = c(0.288481138885885, 
+# 0.160432444597162, 0.209795981107601, 0.341290435409352), Q = c(1, 
+# 5.39011701149672, 0.297813690823323, 0.297813690823323, 17.1942098908114, 
+# 1), model = "TIM1", k = 4, shape = 0.26375833217876)
+
+```
