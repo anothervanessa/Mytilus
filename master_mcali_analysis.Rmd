@@ -19,21 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
-library(knitr)
-library(ape)
-library(pegas)
-library(rlang)
-library(adegenet)
-library(rentrez)
-library(stringr)
-library(plyr)
-library(magrittr)
-library(dplyr)
-library(Biostrings)
-library(BiocGenerics)
-library(betapart)
-```
+
 
 
 #Install new StrataG, read Fasta, Fasta > Matrix, IBD Analysis
@@ -154,6 +140,8 @@ library(gg.gap)
 #install.packages("apex")
 #library(apex)
 ```
+
+
 
 
 ```{r}
