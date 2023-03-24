@@ -1,0 +1,195 @@
+---
+title: "Mytilus californianus full range population genetic analysis"
+author: "Vanessa Garcia, Paulina Perez, Alicia Abadia-Cardoso, Eric Crandall"
+format:
+  html:
+    theme: solar
+    toc: true
+    toc-float: true
+    toc-depth: 5
+    df-print: paged
+    smooth-scroll: true
+    citations-hover: true
+editor: source
+warning: false
+code-fold: true
+---
+
+# Setup
+
+Load the packages we will need for this analysis
+
+```{r}
+library(knitr)
+library(ape)
+library(pegas)
+library(rlang)
+library(adegenet)
+library(rentrez)
+library(tidyverse)
+#library(Biostrings)
+#library(BiocGenerics)
+library(betapart)
+library(strataG)
+library(readxl)
+library(ggmap)
+library(raster)
+library(phyclust)
+library(phangorn)
+```
+
+# Introduction
+
+Here we will be conducting a population genetic analysis of the California Mussel (Mejillón de California; *Mytilus californianus*), a species that inhabits the mid-intertidal zone on open coastlines from Baja California to southern Alaska. We have been fortunate to obtain tissue samples and mitochondrial CO1 sequences from the entire range, from near Sitka in Alaska, to Punta Baja in Baja California. We now want to conduct some basic population genetic analyses on these data, and then set up an analysis in Migrate-n , which Eric has shown to be much more sensitive to metapopulation structure than $F_{ST}$-based methods.
+
+# Data Import
+
+The data comprise 501 mtDNA sequences for 480 bp from 23(!) localities, so an average sample size of `r 501/24` per locality. Pretty good! We will import them here from a FASTA file, and split of the locality names, and convert them into formats for various packages.
+
+```{r}
+# read into DNAbin format
+myt_aln <- read.FASTA("data/mytilus_full_range_230323.fasta") 
+# convert from a list DNAbin to a matrix DNAbin, as the sequences were already aligned in Geneious
+myt_aln <- as.matrix(myt_aln)
+# get the population names and add spaces to them
+loc <- gsub(labels(myt_aln),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
+loc <- gsub(loc, pattern="([a-z])([A-Z])", replacement= "\\1 \\2")
+#create a list of localities
+locorder <- unique(loc)
+# convert to gtypes format for StrataG
+myt_g <- sequence2gtypes(myt_aln, strata=loc)
+# find and label the unique haplotypes
+myt_g <- labelHaplotypes(myt_g)
+
+#Warning message:  <-- why is it throwing this warning??!!
+#The following samples are missing data for all loci and have been removed: CapeArago_20, #WhitePoint_03, WhitePoint_17 
+```
+Read in the metadata - just the sampling event metadata for now.
+
+```{r}
+events <- read_excel("data/Mcalifornianus_GEOME.xlsx", sheet = "Events")
+events <- events %>% mutate(decimalLatitude = as.numeric(decimalLatitude)) %>% 
+                    mutate(decimalLongitude = as.numeric(decimalLongitude))
+
+events2 <- events[,c("locality","decimalLatitude", "decimalLongitude")] 
+names(events2) <- c("locality", "lat", "lon")
+
+mc_map <- get_map(location = c(top = 60, bottom = 28, left = -145, right = -114 ), zoom = 4)
+
+ggmap(mc_map) + 
+  geom_point(data = events2, color = "red", size = 2) +
+  geom_text(data = events2, aes(label = paste("  ", as.character(locality), sep="")), 
+            angle = 60, color = "yellow", size = 2)
+
+```
+
+# Fst
+
+Calculate pairwise Wright's $F_{ST}$ and $\Phi_{ST}$, which is the sequence analog.
+
+```{r}
+pairwise <- pairwiseTest(myt_g, model = "raw", nrep=0, quietly = F, max.cores=4)
+pairwise_phi <- pairwiseMatrix(pairwise, stat = "PHIst")
+pairwise_phi <- as.matrix(pairwise_phi)
+pairwise_phi[upper.tri(pairwise_phi)]<- t(pairwise_phi)[upper.tri(pairwise_phi)]
+
+pairwise_phi <- pairwise_phi[locorder, locorder]
+#pairwise_phi <- pairwise_phi/(1-pairwise_phi)
+pairwise_phi.d <- as.dist(pairwise_phi)
+
+pairwise_fst <- pairwiseMatrix(pairwise, stat = "Fst")
+pairwise_fst <- as.matrix(pairwise_fst)
+pairwise_fst[upper.tri(pairwise_fst)]<- t(pairwise_fst)[upper.tri(pairwise_fst)]
+
+pairwise_fst <- pairwise_fst[locorder, locorder]
+#pairwise_fst <- pairwise_fst/(1-pairwise_fst)
+pairwise_fst.d <- as.dist(pairwise_fst)
+
+heatmap(phiST)
+
+write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
+write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
+```
+
+# Isolation by Distance
+
+```{r}
+events2 <- events2 %>% arrange(desc(lat))
+gdist <- pointDistance(p1=events2[,c(3,2)], lonlat=T,allpairs=T)/1000 #measure great circle distance between points in kilometers
+
+gdist<-as.dist(gdist) #convert to distance object
+
+phi_mantel<-mantel.randtest(pairwise_phi.d,gdist)
+
+phi_plot<- ggplot(tibble(gdist,pairwise_phi.d), aes(x=gdist,y=pairwise_phi.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(Phi["ST"]/1-Phi["ST"]))
+phi_plot
+
+ggsave(filename = "phi_plot.pdf", width = 8, height=6,units = "in")
+
+
+fst_mantel<-mantel.randtest(pairwise_fst.d,gdist)
+
+fst_plot<- ggplot(tibble(gdist,pairwise_fst.d), aes(x=gdist,y=pairwise_fst.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(F["ST"]/1-F["ST"]))
+
+
+
+fst_plot
+
+ggsave(filename = "Fst_plot.pdf", width = 8, height=6,units = "in")
+```
+
+# Haplotype Networks
+
+## Pegas Haplotype Network
+
+Code for haplotype network in pegas
+
+```{r}
+#Haplotype Code to visualize genetic variation between populations
+
+d<-dist.dna(myt_aln) # I think this is the right matrix to use
+h<-pegas::haplotype(myt_aln)
+h<-sort(h,what="label")
+net<-pegas::haploNet(h)
+#net<-pegas::mst(h)
+i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
+i<-i[order(i$values),]
+ind.hap<-table(hap=i$ind, pop=pop)
+
+ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","mediumseagreen","darkslateblue","firebrick","coral","darkorange3","darkorange","gold2","gold","yellow1","moccasin","lightskyblue1","lightcyan1")
+
+
+ind.hap <- ind.hap[,c(11,6,1,13,3,8,16,18,2,5,17,10,15,4,19,12,7,14,9)]
+ind.hap
+
+
+pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
+plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
+legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
+
+dev.off()
+
+```
+
+## PopArt
+
+Code for preparing for PopArt.
+
+```{r}
+hapseqs<-h[] # pull out the DNAbin object from the haplotype object #write this to nexus format
+write.nexus.data(hapseqs,
+                 file="neralb_haplotypes.nex",
+interleaved=F) #write both haplotype tables to csv
+write.csv(ind.hap, file="neralb_table.csv",
+quote=F)
+write.csv(ind.hap2, file="neralb_table_IP.csv",
+quote=F)
+#write the flattened metadata too.
+write.csv(event_info, file="neralb_event_metadata.csv",
+quote=F)

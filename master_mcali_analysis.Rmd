@@ -1,0 +1,183 @@
+---
+title: "master_mcali_analysis"
+author: "Vanessa Garcia"
+date: "4/30/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("adegenet","ade4","ape","apex","BiocGenerics","Biostrings","devtools","dplyr","forcats","ggplot2","gplots","iRanges","knitr","magrittr","mapdata","maps","maptools","markdown","pegas","perm","permute","phangorn","phyclust","plotly","plyr","purrr","raster","readr","readxl","rentrez","rlang","S4vectors","sp","stringr","tible","tidyr","tidyverse","usethis","utf8","Xvector")
+```
+
+```{r}
+#install.packages("betapart")
+#library(betapart)
+```
+
+
+```{r}
+library(knitr)
+library(ape)
+library(pegas)
+library(rlang)
+library(adegenet)
+library(rentrez)
+library(stringr)
+library(plyr)
+library(magrittr)
+library(dplyr)
+library(Biostrings)
+library(BiocGenerics)
+library(betapart)
+```
+
+
+#Install new StrataG, read Fasta, Fasta > Matrix, IBD Analysis
+```{r}
+#install.packages("RcppArmadillo", repos="https://rcppcore.github.io/drat")
+
+
+
+library(devtools)
+devtools::install_github('ericarcher/strataG', build_vignettes = T)
+library(strataG)
+myt_aln<-read.FASTA("04_23_22_mcali_sorted_metapop.fasta")#"lat_sorted_seqs.fasta"
+myt_aln<-as.matrix(myt_aln)
+pop<-gsub(labels(myt_aln),pattern="([A-Za-z_]+)_\\d+",replacement="\\1")
+pop<-gsub(pop,pattern="_",replacement="")
+
+poporder<-unique(pop)
+
+myt_g<-sequence2gtypes(myt_aln,strata=pop)
+myt_g<-labelHaplotypes(myt_g)
+pairwise<-pairwiseTest(myt_g, model = "raw", nrep=0,quietly = F, max.cores=4)
+pairwise_phi<-as.dist(pairwiseMatrix(pairwise, stat = "PHIst"))
+pairwise_phi <- as.matrix(pairwise_phi)[poporder, poporder]
+pairwise_phi <- pairwise_phi/(1-pairwise_phi)
+pairwise_phi.d <- as.dist(pairwise_phi)
+
+pairwise_fst <- as.dist(pairwiseMatrix(pairwise, stat = "Fst"))
+pairwise_fst <- as.matrix(pairwise_fst)[poporder, poporder]
+pairwise_fst <- pairwise_fst/(1-pairwise_fst)
+pairwise_fst.d <- as.dist(pairwise_fst)
+
+write.csv(pairwise_phi, "pairwise_phi_mcali_2022")
+write.csv(pairwise_fst, "pairwise_fst_mcali_2022")
+
+
+myt_metadata<-read_xlsx("mcalifornianus_geo_metadata.xlsx",col_types = c("text","numeric","numeric"))#"myt_metadata_updated_gis.xlsx"
+
+#myt_unique<-unique(myt_metadata[,c("locality","decimalLatitude","decimalLongitude")]) #pull out just locality and lat/longs, and get unique values
+
+#myt_metadata <- myt_metadata %>% arrange(desc(decimalLatitude))
+
+
+
+gdist<-pointDistance(p1=myt_metadata[,c(3,2)], lonlat=T,allpairs=T)/1000 #measure great circle distance between points in kilometers
+
+gdist<-as.dist(gdist) #convert to distance object
+
+phi_mantel<-mantel.randtest(pairwise_phi.d,gdist)
+
+phi_plot<- ggplot(tibble(gdist,pairwise_phi.d), aes(x=gdist,y=pairwise_phi.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(Phi["ST"]/1-Phi["ST"]))
+phi_plot
+
+ggsave(filename = "phi_plot.pdf", width = 8, height=6,units = "in")
+
+fst_plot<- ggplot(tibble(gdist,pairwise_fst.d), aes(x=gdist,y=pairwise_fst.d)) + 
+                    geom_point() + 
+                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    ylab(expression(F["ST"]/1-F["ST"]))
+
+fst_mantel<-mantel.randtest(pairwise_fst.d,gdist)
+
+
+fst_plot
+
+ggsave(filename = "Fst_plot.pdf", width = 8, height=6,units = "in")
+
+```
+
+
+
+```{r}
+#Haplotype Code to visualize genetic variation between populations
+
+d<-dist.dna(myt_aln) # I think this is the right matrix to use
+h<-pegas::haplotype(myt_aln)
+h<-sort(h,what="label")
+net<-pegas::haploNet(h)
+#net<-pegas::mst(h)
+i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
+i<-i[order(i$values),]
+ind.hap<-table(hap=i$ind, pop=pop)
+
+ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","mediumseagreen","darkslateblue","firebrick","coral","darkorange3","darkorange","gold2","gold","yellow1","moccasin","lightskyblue1","lightcyan1")
+
+
+ind.hap <- ind.hap[,c(11,6,1,13,3,8,16,18,2,5,17,10,15,4,19,12,7,14,9)]
+ind.hap
+
+
+pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
+plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
+legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
+
+dev.off()
+
+```
+#Migrate Setup
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+#installed.packages("permute")
+library(permute)
+library(igraph)
+#install.packages("network")
+#install.packages("readxl")
+library(network)
+library(readxl)
+#install.packages("gg.gap")
+library(gg.gap)
+#install.packages(c("phyclust", "phangorn"))
+#library(phyclust)
+#library(phangorn)
+#library(knitr)
+#install.packages("apex")
+#library(apex)
+```
+
+
+```{r}
+mcali<-read.FASTA(file="04_23_22_mcali_sorted_metapop.fasta")
+
+mcali<-as.matrix(mcali)
+mcali_phy<-phyDat(mcali)
+
+dm <- dist.ml(mcali) 
+tree<- NJ(dm)
+mcali_modeltest<-modelTest(mcali_phy, tree,G=T, I=F)
+
+mcali_modeltest<-mcali_modeltest[order(mcali_modeltest$BIC),]
+
+head(mcali_modeltest)
+# some funky code to get the gamma shape parameter
+env<-attr(mcali_modeltest, "env")
+HKY<-get("HKY+G", env)
+eval(HKY, env=env)
+
+plot(density(rgamma(1000,shape=0.2482246)), xlim=c(0,1))
+phangorn:::discrete.gamma(0.2482246,4)#shapeparam
+TiTvRatio(mcali) #need strataG for this
+
+write.nexus.data(mcali,"mcalifornianus_043022_migrate.nex", interleaved=F,missing="N")
+```
+
