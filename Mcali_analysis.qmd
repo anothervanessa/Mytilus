@@ -30,7 +30,7 @@ library(tidyverse)
 #library(Biostrings)
 #library(BiocGenerics)
 library(betapart)
-library(strataG)
+#library(strataG)
 library(readxl)
 library(ggmap)
 library(raster)
@@ -230,3 +230,10 @@ migrate_rates <- c(0.002815926, 0.076790475, 0.529615964, 3.390777635)
 # 1), model = "TIM1", k = 4, shape = 0.26375833217876)
 
 ```
+
+```{r}
+# Format data for migrate
+write.nexus.data(myt_aln,"./migrate/mcali_migrate.nex", interleaved=F,missing="N")
+
+```
+
