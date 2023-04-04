@@ -36,6 +36,7 @@ library(ggmap)
 library(raster)
 library(phyclust)
 library(phangorn)
+library(colorspace)
 ```
 
 # Introduction
@@ -61,8 +62,6 @@ myt_g <- sequence2gtypes(myt_aln, strata=loc)
 # find and label the unique haplotypes
 myt_g <- labelHaplotypes(myt_g)
 
-#Warning message:  <-- why is it throwing this warning??!!
-#The following samples are missing data for all loci and have been removed: CapeArago_20, #WhitePoint_03, WhitePoint_17 
 ```
 Read in the metadata - just the sampling event metadata for now.
 
@@ -117,31 +116,43 @@ write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
 events2 <- events2 %>% arrange(desc(lat))
 gdist <- pointDistance(p1=events2[,c(3,2)], lonlat=T,allpairs=T)/1000 #measure great circle distance between points in kilometers
 
-gdist<-as.dist(gdist) #convert to distance object
+gdist <- as.dist(gdist) #convert to distance object
 
-phi_mantel<-mantel.randtest(pairwise_phi.d,gdist)
+phi_mantel <- mantel.randtest(pairwise_phi.d,gdist)
 
-phi_plot<- ggplot(tibble(gdist,pairwise_phi.d), aes(x=gdist,y=pairwise_phi.d)) + 
+phi_mantel
+
+pairwise_phi.d_linear <- pairwise_phi.d / (1 - pairwise_phi.d)
+
+phi_plot<- ggplot(tibble(gdist,pairwise_phi.d_linear),
+                  aes(x=gdist,y=pairwise_phi.d)) + 
                     geom_point() + 
-                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    geom_smooth(method=lm) + 
+                    xlab("Great Circle Distance(km)") +
                     ylab(expression(Phi["ST"]/1-Phi["ST"]))
 phi_plot
 
-ggsave(filename = "phi_plot.pdf", width = 8, height=6,units = "in")
+ggsave(filename = "results/phi_plot.pdf", 
+       width = 8, height=6,units = "in")
 
 
 fst_mantel<-mantel.randtest(pairwise_fst.d,gdist)
 
-fst_plot<- ggplot(tibble(gdist,pairwise_fst.d), aes(x=gdist,y=pairwise_fst.d)) + 
+fst_mantel
+
+pairwise_fst.d_linear <- pairwise_fst.d / (1 - pairwise_fst.d)
+
+fst_plot<- ggplot(tibble(gdist,pairwise_fst.d_linear), aes(x=gdist,y=pairwise_fst.d)) + 
                     geom_point() + 
-                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    geom_smooth(method=lm) + 
+                    xlab("Great Circle Distance(km)") +
                     ylab(expression(F["ST"]/1-F["ST"]))
 
 
 
 fst_plot
 
-ggsave(filename = "Fst_plot.pdf", width = 8, height=6,units = "in")
+ggsave(filename = "results/Fst_plot.pdf", width = 8, height=6,units = "in")
 ```
 
 # Haplotype Networks
@@ -160,9 +171,11 @@ net<-pegas::haploNet(h)
 #net<-pegas::mst(h)
 i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
 i<-i[order(i$values),]
-ind.hap<-table(hap=i$ind, pop=pop)
+ind.hap<-table(hap=i$ind, pop=loc)
 
 ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","mediumseagreen","darkslateblue","firebrick","coral","darkorange3","darkorange","gold2","gold","yellow1","moccasin","lightskyblue1","lightcyan1")
+
+lajolla <- sequential_hcl(23, palette = "Lajolla")
 
 
 ind.hap <- ind.hap[,c(11,6,1,13,3,8,16,18,2,5,17,10,15,4,19,12,7,14,9)]
@@ -170,7 +183,7 @@ ind.hap
 
 
 pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
-plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
+plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=lajolla,pch=19,ncol=1,cex=0.85)
 legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
 
 dev.off()
@@ -184,15 +197,14 @@ Code for preparing for PopArt.
 ```{r}
 hapseqs<-h[] # pull out the DNAbin object from the haplotype object #write this to nexus format
 write.nexus.data(hapseqs,
-                 file="neralb_haplotypes.nex",
-interleaved=F) #write both haplotype tables to csv
-write.csv(ind.hap, file="neralb_table.csv",
-quote=F)
-write.csv(ind.hap2, file="neralb_table_IP.csv",
-quote=F)
+                 file="popart/mcali_haplotypes.nex",
+                  interleaved=F) #write both haplotype tables to csv
+write.csv(ind.hap, file="popart/mcali_table.csv",
+                  quote=F)
+
 #write the flattened metadata too.
-write.csv(event_info, file="neralb_event_metadata.csv",
-quote=F)
+write.csv(events, file="mcali_event_metadata.csv",
+              quote=F)
 ```
 
 
@@ -229,6 +241,12 @@ migrate_rates <- c(0.002815926, 0.076790475, 0.529615964, 3.390777635)
 # 5.39011701149672, 0.297813690823323, 0.297813690823323, 17.1942098908114, 
 # 1), model = "TIM1", k = 4, shape = 0.26375833217876)
 
+#according to the docs for pml() bf = base frequencies, Q is the lower triangle of the rate matrix, k = number of intervals in the discrete gamma, shape=shape parameter of gamma distribution
+
+Q = c(1, 5.39103240795265, 0.297798914794784, 0.297798914794784, 17.193305668728, 1)
+mat <- matrix(0, nrow = 4, ncol = 4)
+mat[lower.tri(mat, diag = F)] <- Q
+mat
 ```
 
 ```{r}
