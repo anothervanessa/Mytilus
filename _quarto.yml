@@ -1,4 +1,4 @@
 project:
-  title: "Mcali_analysis"
-type: website
-output-dir: docs
+  title: "Mytilus californianus full range population genetic analysis"
+  type: website
+  output-dir: docs

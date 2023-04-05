@@ -17,7 +17,7 @@ code-fold: true
 
 # Setup
 
-Load the packages we will need for this analysis
+Load the packages we will need for this analysis. Following [these instructions](https://quarto.org/docs/publishing/github-pages.html#render-to-docs) to render this code to a website.
 
 ```{r}
 library(knitr)
@@ -30,7 +30,7 @@ library(tidyverse)
 #library(Biostrings)
 #library(BiocGenerics)
 library(betapart)
-#library(strataG)
+library(strataG)
 library(readxl)
 library(ggmap)
 library(raster)
@@ -61,7 +61,8 @@ locorder <- unique(loc)
 myt_g <- sequence2gtypes(myt_aln, strata=loc)
 # find and label the unique haplotypes
 myt_g <- labelHaplotypes(myt_g)
-
+# get the Ti:Tv ratio
+TiTvRatio(myt_g)
 ```
 Read in the metadata - just the sampling event metadata for now.
 
@@ -106,8 +107,8 @@ pairwise_fst.d <- as.dist(pairwise_fst)
 
 heatmap(pairwise_phi)
 
-write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
-write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
+#write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
+#write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
 ```
 
 # Isolation by Distance
@@ -182,11 +183,11 @@ ind.hap <- ind.hap[,c(11,6,1,13,3,8,16,18,2,5,17,10,15,4,19,12,7,14,9)]
 ind.hap
 
 
-pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
-plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=lajolla,pch=19,ncol=1,cex=0.85)
-legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
+#pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
+#plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=lajolla,pch=19,ncol=1,cex=0.85)
+#legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
 
-dev.off()
+#dev.off()
 
 ```
 
@@ -195,6 +196,7 @@ dev.off()
 Code for preparing for PopArt.
 
 ```{r}
+#| eval: false
 hapseqs<-h[] # pull out the DNAbin object from the haplotype object #write this to nexus format
 write.nexus.data(hapseqs,
                  file="popart/mcali_haplotypes.nex",
@@ -225,16 +227,27 @@ mcali_modeltest<-modelTest(myt_phy, tree,G=T, I=F)
 mcali_modeltest<-mcali_modeltest[order(mcali_modeltest$BIC),]
 
 head(mcali_modeltest)
-# some funky code to get the gamma shape parameter
+```
+
+Some funky code to get the gamma shape parameter, and discrete rates
+
+```{r}
+#this is one way - reach into the environment 
 env <- attr(mcali_modeltest, "env")
 TIM1 <- get("TIM1+G(4)", env)
 #eval(HKY, env=env)
 shape <- 0.26375833217876
 
-plot(density(rgamma(1000,shape=shape)), xlim=c(0,1))
-phangorn:::discrete.gamma(shape,4)#shapeparam
-migrate_rates <- c(0.002815926, 0.076790475, 0.529615964, 3.390777635)
-#TiTvRatio(mcali) #need strataG for this
+# here's the other way - as.pml()
+mcali_pml <- as.pml(mcali_modeltest)
+mcali_pml$g # four rate categories
+mcali_pml$w # probabilities of each rate
+plot(density(rgamma(10000,shape=shape)), xlim=c(0,1))
+
+migrate_rates <- phangorn:::discrete.gamma(shape,4)
+
+plot_gamma_plus_inv(shape =shape)
+TiTvRatio(myt_g) #need strataG for this
 
 # pml(tree = `tree_TIM1+G(4)`, data = data, bf = c(0.288481138885885, 
 # 0.160432444597162, 0.209795981107601, 0.341290435409352), Q = c(1, 
@@ -247,11 +260,13 @@ Q = c(1, 5.39103240795265, 0.297798914794784, 0.297798914794784, 17.193305668728
 mat <- matrix(0, nrow = 4, ncol = 4)
 mat[lower.tri(mat, diag = F)] <- Q
 mat
+
+
 ```
 
 ```{r}
 # Format data for migrate
-write.nexus.data(myt_aln,"./migrate/mcali_migrate.nex", interleaved=F,missing="N")
+#write.nexus.data(myt_aln,"./migrate/mcali_migrate.nex", interleaved=F,missing="N")
 
 ```
 
