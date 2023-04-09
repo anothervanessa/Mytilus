@@ -17,7 +17,7 @@ code-fold: true
 
 # Setup
 
-Load the packages we will need for this analysis
+Load the packages we will need for this analysis. Following [these instructions](https://quarto.org/docs/publishing/github-pages.html#render-to-docs) to render this code to a website.
 
 ```{r}
 library(knitr)
@@ -30,12 +30,13 @@ library(tidyverse)
 #library(Biostrings)
 #library(BiocGenerics)
 library(betapart)
-#library(strataG)
+library(strataG)
 library(readxl)
 library(ggmap)
 library(raster)
 library(phyclust)
 library(phangorn)
+library(colorspace)
 ```
 
 # Introduction
@@ -60,9 +61,8 @@ locorder <- unique(loc)
 myt_g <- sequence2gtypes(myt_aln, strata=loc)
 # find and label the unique haplotypes
 myt_g <- labelHaplotypes(myt_g)
-
-#Warning message:  <-- why is it throwing this warning??!!
-#The following samples are missing data for all loci and have been removed: CapeArago_20, #WhitePoint_03, WhitePoint_17 
+# get the Ti:Tv ratio
+TiTvRatio(myt_g)
 ```
 Read in the metadata - just the sampling event metadata for now.
 
@@ -107,8 +107,8 @@ pairwise_fst.d <- as.dist(pairwise_fst)
 
 heatmap(pairwise_phi)
 
-write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
-write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
+#write.csv(pairwise_phi, "results/pairwise_phi_mcali.csv")
+#write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
 ```
 
 # Isolation by Distance
@@ -117,31 +117,43 @@ write.csv(pairwise_fst, "results/pairwise_fst_mcali.csv")
 events2 <- events2 %>% arrange(desc(lat))
 gdist <- pointDistance(p1=events2[,c(3,2)], lonlat=T,allpairs=T)/1000 #measure great circle distance between points in kilometers
 
-gdist<-as.dist(gdist) #convert to distance object
+gdist <- as.dist(gdist) #convert to distance object
 
-phi_mantel<-mantel.randtest(pairwise_phi.d,gdist)
+phi_mantel <- mantel.randtest(pairwise_phi.d,gdist)
 
-phi_plot<- ggplot(tibble(gdist,pairwise_phi.d), aes(x=gdist,y=pairwise_phi.d)) + 
+phi_mantel
+
+pairwise_phi.d_linear <- pairwise_phi.d / (1 - pairwise_phi.d)
+
+phi_plot<- ggplot(tibble(gdist,pairwise_phi.d_linear),
+                  aes(x=gdist,y=pairwise_phi.d)) + 
                     geom_point() + 
-                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    geom_smooth(method=lm) + 
+                    xlab("Great Circle Distance(km)") +
                     ylab(expression(Phi["ST"]/1-Phi["ST"]))
 phi_plot
 
-ggsave(filename = "phi_plot.pdf", width = 8, height=6,units = "in")
+ggsave(filename = "results/phi_plot.pdf", 
+       width = 8, height=6,units = "in")
 
 
 fst_mantel<-mantel.randtest(pairwise_fst.d,gdist)
 
-fst_plot<- ggplot(tibble(gdist,pairwise_fst.d), aes(x=gdist,y=pairwise_fst.d)) + 
+fst_mantel
+
+pairwise_fst.d_linear <- pairwise_fst.d / (1 - pairwise_fst.d)
+
+fst_plot<- ggplot(tibble(gdist,pairwise_fst.d_linear), aes(x=gdist,y=pairwise_fst.d)) + 
                     geom_point() + 
-                    geom_smooth(method=lm) + xlab("Great Circle Distance(km)") +
+                    geom_smooth(method=lm) + 
+                    xlab("Great Circle Distance(km)") +
                     ylab(expression(F["ST"]/1-F["ST"]))
 
 
 
 fst_plot
 
-ggsave(filename = "Fst_plot.pdf", width = 8, height=6,units = "in")
+ggsave(filename = "results/Fst_plot.pdf", width = 8, height=6,units = "in")
 ```
 
 # Haplotype Networks
@@ -160,20 +172,22 @@ net<-pegas::haploNet(h)
 #net<-pegas::mst(h)
 i<-utils::stack(setNames(attr(h,"index"),rownames(h)))
 i<-i[order(i$values),]
-ind.hap<-table(hap=i$ind, pop=pop)
+ind.hap<-table(hap=i$ind, pop=loc)
 
 ghost.stories<- c("darkslategrey","darkslateblue", "blue4", "royalblue4", "deepskyblue", "royalblue1", "skyblue4","mediumseagreen","darkslateblue","firebrick","coral","darkorange3","darkorange","gold2","gold","yellow1","moccasin","lightskyblue1","lightcyan1")
+
+lajolla <- sequential_hcl(23, palette = "Lajolla")
 
 
 ind.hap <- ind.hap[,c(11,6,1,13,3,8,16,18,2,5,17,10,15,4,19,12,7,14,9)]
 ind.hap
 
 
-pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
-plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=ghost.stories,pch=19,ncol=1,cex=0.85)
-legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
+#pdf(file = "modified_haplotype.pdf", width = 8.5, height = 11)
+#plot(net,size=(attr(net,"freq")/5),scale.ratio=2.25,pie=ind.hap,legend=F,labels=F,threshold=0,show.mutation=2,bg=lajolla,pch=19,ncol=1,cex=0.85)
+#legend("topleft",colnames(ind.hap),col=ghost.stories,pch=19,ncol=1,cex=0.85)
 
-dev.off()
+#dev.off()
 
 ```
 
@@ -182,17 +196,17 @@ dev.off()
 Code for preparing for PopArt.
 
 ```{r}
+#| eval: false
 hapseqs<-h[] # pull out the DNAbin object from the haplotype object #write this to nexus format
 write.nexus.data(hapseqs,
-                 file="neralb_haplotypes.nex",
-interleaved=F) #write both haplotype tables to csv
-write.csv(ind.hap, file="neralb_table.csv",
-quote=F)
-write.csv(ind.hap2, file="neralb_table_IP.csv",
-quote=F)
+                 file="popart/mcali_haplotypes.nex",
+                  interleaved=F) #write both haplotype tables to csv
+write.csv(ind.hap, file="popart/mcali_table.csv",
+                  quote=F)
+
 #write the flattened metadata too.
-write.csv(event_info, file="neralb_event_metadata.csv",
-quote=F)
+write.csv(events, file="mcali_event_metadata.csv",
+              quote=F)
 ```
 
 
@@ -213,27 +227,46 @@ mcali_modeltest<-modelTest(myt_phy, tree,G=T, I=F)
 mcali_modeltest<-mcali_modeltest[order(mcali_modeltest$BIC),]
 
 head(mcali_modeltest)
-# some funky code to get the gamma shape parameter
+```
+
+Some funky code to get the gamma shape parameter, and discrete rates
+
+```{r}
+#this is one way - reach into the environment 
 env <- attr(mcali_modeltest, "env")
 TIM1 <- get("TIM1+G(4)", env)
 #eval(HKY, env=env)
 shape <- 0.26375833217876
 
-plot(density(rgamma(1000,shape=shape)), xlim=c(0,1))
-phangorn:::discrete.gamma(shape,4)#shapeparam
-migrate_rates <- c(0.002815926, 0.076790475, 0.529615964, 3.390777635)
-#TiTvRatio(mcali) #need strataG for this
+# here's the other way - as.pml()
+mcali_pml <- as.pml(mcali_modeltest)
+mcali_pml$g # four rate categories
+mcali_pml$w # probabilities of each rate
+plot(density(rgamma(10000,shape=shape)), xlim=c(0,1))
+
+migrate_rates <- phangorn:::discrete.gamma(shape,4)
+
+plot_gamma_plus_inv(shape =shape)
+TiTvRatio(myt_g) #need strataG for this
 
 # pml(tree = `tree_TIM1+G(4)`, data = data, bf = c(0.288481138885885, 
 # 0.160432444597162, 0.209795981107601, 0.341290435409352), Q = c(1, 
 # 5.39011701149672, 0.297813690823323, 0.297813690823323, 17.1942098908114, 
 # 1), model = "TIM1", k = 4, shape = 0.26375833217876)
 
+#according to the docs for pml() bf = base frequencies, Q is the lower triangle of the rate matrix, k = number of intervals in the discrete gamma, shape=shape parameter of gamma distribution
+
+Q = c(1, 5.39103240795265, 0.297798914794784, 0.297798914794784, 17.193305668728, 1)
+mat <- matrix(0, nrow = 4, ncol = 4)
+mat[lower.tri(mat, diag = F)] <- Q
+mat
+
+
 ```
 
 ```{r}
 # Format data for migrate
-write.nexus.data(myt_aln,"./migrate/mcali_migrate.nex", interleaved=F,missing="N")
+#write.nexus.data(myt_aln,"./migrate/mcali_migrate.nex", interleaved=F,missing="N")
 
 ```
 
