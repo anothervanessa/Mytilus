@@ -1,4 +1,6 @@
 project:
+  type: website
+  output-dir: docsproject:
   title: "Mcali_analysis"
 type: website
 output-dir: docs
