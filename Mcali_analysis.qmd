@@ -29,8 +29,8 @@ library(rentrez)
 library(tidyverse)
 #library(Biostrings)
 #library(BiocGenerics)
-library(betapart)
-library(strataG)
+#library(betapart)
+#library(strataG)
 library(readxl)
 library(ggmap)
 library(raster)
@@ -234,17 +234,18 @@ Some funky code to get the gamma shape parameter, and discrete rates
 ```{r}
 #this is one way - reach into the environment 
 env <- attr(mcali_modeltest, "env")
-TIM1 <- get("TIM1+G(4)", env)
+TrN <- get("TrN+G(4)", env)
 #eval(HKY, env=env)
-shape <- 0.26375833217876
+
 
 # here's the other way - as.pml()
-mcali_pml <- as.pml(mcali_modeltest)
+mcali_pml <- as.pml(mcali_modeltest, model = "TrN+G(4)")
+shape <- mcali_pml$shape
 mcali_pml$g # four rate categories
 mcali_pml$w # probabilities of each rate
 plot(density(rgamma(10000,shape=shape)), xlim=c(0,1))
 
-migrate_rates <- phangorn:::discrete.gamma(shape,4)
+#migrate_rates <- phangorn:::discrete.gamma(shape,4)
 
 plot_gamma_plus_inv(shape =shape)
 TiTvRatio(myt_g) #need strataG for this
@@ -256,7 +257,8 @@ TiTvRatio(myt_g) #need strataG for this
 
 #according to the docs for pml() bf = base frequencies, Q is the lower triangle of the rate matrix, k = number of intervals in the discrete gamma, shape=shape parameter of gamma distribution
 
-Q = c(1, 5.39103240795265, 0.297798914794784, 0.297798914794784, 17.193305668728, 1)
+Q <-  mcali_pml$Q
+
 mat <- matrix(0, nrow = 4, ncol = 4)
 mat[lower.tri(mat, diag = F)] <- Q
 mat
