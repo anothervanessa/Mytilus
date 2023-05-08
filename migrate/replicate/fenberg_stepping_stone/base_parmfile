@@ -1,0 +1,68 @@
+################################################################################
+# Parmfile for Migrate 3.6.4 [do not remove these first TWO lines]
+menu=NO
+nmlength=10
+datatype=SequenceData
+ttratio=2.902439
+freqs-from-data=YES
+seqerror-rate=0.0
+categories=1
+rates=4:0.002924874 0.078230226 0.533421435 3.385423464
+prob-rates=4:0.25 0.25 0.25 0.25
+autocorrelation=NO
+weights=NO
+interleaved=NO
+fast-likelihood=NO
+inheritance-scalars={1}
+population-relabel={1 1 2 2 2 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4}
+usertree=RANDOMTREE
+infile=../../mcali_migrate.mig
+random-seed=AUTO
+title=Whole Range Migrate Analysis of Mytilus californianus with mtDNA CO1
+progress=VERBOSE
+logfile=YES:logfile.txt
+print-data=NO
+outfile=outfile.txt
+pdf-outfile=outfile.pdf
+use-M=YES
+plot=NO
+mathfile=mathfile
+profile=ALL:QUICK
+print-tree=NONE
+write-summary=NO
+aic-modeltest=NO
+mig-histogram=NO
+skyline=NO
+theta=own:{0.01}
+migration=own:{100000}
+mutation=CONSTANT
+fst-type=THETA
+custom-migration={
+*	*	0	0
+*	*	*	0
+0	*	*	*
+0	0	*	* 
+}
+geo=NO
+bayes-update=YES
+bayes-updatefreq=0.500000
+bayes-posteriorbins=2000 2000
+bayes-posteriormaxtype=ALL
+bayes-file=YES:bayesfile
+bayes-allfile=YES:1:bayesallfile
+bayes-proposals= THETA METROPOLIS Sampler
+bayes-proposals= MIG SLICE Sampler
+bayes-priors= THETA WEXPPRIOR: 0.000010 0.010000 10.000000 1.00000 
+bayes-priors= MIG WEXPPRIOR: 0.000100 100000.000000 1000000.000000 100000.000000 
+long-chains=1
+long-inc=500
+long-sample=100000
+burn-in=10000
+heating=YES:1:{1,1.5,3,100000}
+heated-swap=YES
+moving-steps=NO
+long-chain-epsilon=INFINITY
+gelman-convergence=No
+replicate=YES:3
+resistance=0.000100
+end
